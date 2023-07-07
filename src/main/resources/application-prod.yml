@@ -1,0 +1,19 @@
+spring:
+  # mysql
+  datasource:
+    url: jdbc:mysql://${rds.hostname}:${rds.port}/${rds.db.name}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${rds.username}
+    password: ${rds.password}
+
+  # jpa
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+  messages:
+    basename: i18n/exception
+    encoding: UTF-8

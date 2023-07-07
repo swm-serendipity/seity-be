@@ -36,4 +36,10 @@ src/test/resources/application-API-KEY.properties
 /.nb-gradle/
 
 ### VS Code ###
-.vscode/
+.vscode
+
+### DS Store ###
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store

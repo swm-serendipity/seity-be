@@ -22,21 +22,49 @@ repositories {
 }
 
 dependencies {
+	// Spring boot
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// Web
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Spring Security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// Rabbit mq
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
-	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+	testImplementation 'org.springframework.amqp:spring-rabbit-test'
+
+	// JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// MySQL
+	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	// MongoDB
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+	// H2
+	runtimeOnly 'com.h2database:h2'
+
+	// Elastic Search
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// JWT
+	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+
+	// Lombok
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.h2database:h2'
-	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
 	testImplementation 'io.projectreactor:reactor-test'
-	testImplementation 'org.springframework.amqp:spring-rabbit-test'
 }
 
 tasks.named('test') {

@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,9 +27,7 @@ import java.util.stream.Collectors;
 public class Member extends BaseTimeEntity implements UserDetails {
 
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
-    @Column(columnDefinition = "BINARY(16)")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(nullable = false)
@@ -44,7 +43,7 @@ public class Member extends BaseTimeEntity implements UserDetails {
     private String email;
 
     @Column(nullable = false)
-    private LocalDateTime birthDate;
+    private LocalDate birthDate;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -98,7 +97,7 @@ public class Member extends BaseTimeEntity implements UserDetails {
         return status != MemberStatus.WAITING_APPROVE && status != MemberStatus.STOP && status != MemberStatus.DELETE;
     }
 
-    private Member(String password, String name, String loginId, String email, LocalDateTime birthDate,
+    private Member(String password, String name, String loginId, String email, LocalDate birthDate,
                   MemberRole memberRole, MemberPart part, MemberStatus status) {
 
         this.password = password;
@@ -124,7 +123,7 @@ public class Member extends BaseTimeEntity implements UserDetails {
      * @return 생성된 member entity
      */
     public static Member createMember(String password, String name, String loginId, String email,
-                                      LocalDateTime birthDate, MemberRole memberRole, MemberPart part) {
+                                      LocalDate birthDate, MemberRole memberRole, MemberPart part) {
 
         return new Member(password, name, loginId, email, birthDate, memberRole, part, MemberStatus.WAITING_APPROVE);
     }

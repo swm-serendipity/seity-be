@@ -38,4 +38,12 @@ public class TestController {
             return testRepository.findById(entity.getId()).get().getName();
         }
     }
+
+    /**
+     * security 테스트를 위한 메서드입니다.
+     */
+    @GetMapping("/security")
+    public String securityTest() {
+        return "success";
+    }
 }

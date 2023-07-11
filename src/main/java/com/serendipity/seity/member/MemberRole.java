@@ -1,34 +1,21 @@
 package com.serendipity.seity.member;
 
-import com.serendipity.seity.common.exception.BaseException;
-import com.serendipity.seity.common.response.BaseResponseStatus;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 
 /**
- * member의 직무를 표현하는 enum 클래스입니다.
+ * member role enum 클래스입니다.
  *
  * @author Min Ho CHO
  */
+@Getter
+@AllArgsConstructor
 public enum MemberRole {
 
-    GENERAL("GENERAL"),
-    ADMIN("ADMIN");
+    USER("USER", "일반 사용자 권한"),
+    ADMIN("ADMIN", "보안 담당자 권한");
 
-    private final String value;
-
-    MemberRole(String value) {
-        this.value = value;
-    }
-
-    public static MemberRole getRole(String role) throws BaseException {
-
-        for (MemberRole value : MemberRole.values()) {
-
-            if (value.value.equals(role)) {
-                return value;
-            }
-        }
-
-        throw new BaseException(BaseResponseStatus.INVALID_MEMBER_ROLE_EXCEPTION);
-    }
-
+    private final String code;
+    private final String displayName;
 }

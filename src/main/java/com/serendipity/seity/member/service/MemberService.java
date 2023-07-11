@@ -2,7 +2,6 @@ package com.serendipity.seity.member.service;
 
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.member.MemberPart;
-import com.serendipity.seity.member.MemberRole;
 import com.serendipity.seity.member.auth.refreshtoken.RefreshToken;
 import com.serendipity.seity.member.auth.refreshtoken.repository.RefreshTokenRedisRepository;
 import com.serendipity.seity.member.dto.*;
@@ -74,7 +73,7 @@ public class MemberService {
 
         return new SignUpResponse(memberRepository.save(createMember(passwordEncoder.encode(request.getPassword()),
                 request.getName(), request.getLoginId(), request.getEmail(), request.getBirthDate(),
-                MemberRole.getRole(request.getMemberRole()), MemberPart.getPart(request.getPart()))).getId());
+                MemberPart.getPart(request.getPart()))).getId());
 
     }
 

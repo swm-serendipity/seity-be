@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.serendipity.seity.member.MemberSecurityRole.USER;
+import static com.serendipity.seity.member.MemberRole.USER;
 
 /**
  * member 도메인 클래스입니다.
@@ -44,10 +44,6 @@ public class Member extends BaseTimeEntity implements UserDetails {
 
     @Column(nullable = false)
     private LocalDate birthDate;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private MemberRole memberRole;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -97,15 +93,14 @@ public class Member extends BaseTimeEntity implements UserDetails {
         return status != MemberStatus.WAITING_APPROVE && status != MemberStatus.STOP && status != MemberStatus.DELETE;
     }
 
-    private Member(String password, String name, String loginId, String email, LocalDate birthDate,
-                  MemberRole memberRole, MemberPart part, MemberStatus status) {
+    private Member(String password, String name, String loginId, String email, LocalDate birthDate, MemberPart part,
+                   MemberStatus status) {
 
         this.password = password;
         this.name = name;
         this.loginId = loginId;
         this.email = email;
         this.birthDate = birthDate;
-        this.memberRole = memberRole;
         this.part = part;
         this.status = status;
         this.roles.add(USER.getCode());     // TODO: 회원가입 시점부터 관리자 권한을 얻는 것이 가능한지 의논 필요
@@ -119,13 +114,12 @@ public class Member extends BaseTimeEntity implements UserDetails {
      * @param loginId 로그인 아이디
      * @param email 이메일
      * @param birthDate 생년월일
-     * @param memberRole 직책
      * @param part 직무
      * @return 생성된 member entity
      */
     public static Member createMember(String password, String name, String loginId, String email,
-                                      LocalDate birthDate, MemberRole memberRole, MemberPart part) {
+                                      LocalDate birthDate, MemberPart part) {
 
-        return new Member(password, name, loginId, email, birthDate, memberRole, part, MemberStatus.WAITING_APPROVE);
+        return new Member(password, name, loginId, email, birthDate, part, MemberStatus.WAITING_APPROVE);
     }
 }

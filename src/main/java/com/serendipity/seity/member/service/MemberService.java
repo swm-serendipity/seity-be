@@ -6,6 +6,7 @@ import com.serendipity.seity.member.MemberRole;
 import com.serendipity.seity.member.dto.*;
 import com.serendipity.seity.member.auth.provider.JwtTokenProvider;
 import com.serendipity.seity.member.repository.MemberRepository;
+import com.serendipity.seity.redis.repository.RedisTemplateRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,6 +31,7 @@ public class MemberService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final RedisTemplateRepository redisTemplateRepository;
 
     /**
      * 로그인 메서드입니다.
@@ -48,6 +50,10 @@ public class MemberService {
 
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
         TokenDto tokenDto = jwtTokenProvider.generateToken(authentication);
+
+        // 4. refresh token을 redis에 저장
+        redisTemplateRepository.storeString(request.getLoginId(), tokenDto.getRefreshToken());
+        
         return new LoginResponse(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
     }
 

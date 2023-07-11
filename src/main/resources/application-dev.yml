@@ -18,18 +18,17 @@ spring:
     basename: i18n/exception
     encoding: UTF-8
 
-    #cache:
-    #type: redis
-
-    #redis:
-    #port: 6379
-    #host: localhost
-
   # 파일 업로드 크기 설정
   servlet:
     multipart:
       max-file-size: 20MB
       max-request-size: 20MB
+
+  # redis
+  data:
+    redis:
+      port: 6379
+      host: localhost
 
 logging.level:
   org.hibernate.SQL: debug

@@ -5,8 +5,10 @@ import com.serendipity.seity.common.response.BaseResponse;
 import com.serendipity.seity.member.dto.LoginRequest;
 import com.serendipity.seity.member.dto.SignUpRequest;
 import com.serendipity.seity.member.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,8 +38,17 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public BaseResponse<?> login(@RequestBody LoginRequest request) throws BaseException {
+    public BaseResponse<?> login(@RequestBody LoginRequest request) {
 
         return new BaseResponse<>(memberService.login(request));
+    }
+
+    /**
+     * access token 재발급 메서드입니다.
+     */
+    @GetMapping("/auth/reissue")
+    public BaseResponse<?> reissueToken(HttpServletRequest request) throws BaseException {
+
+        return new BaseResponse<>(memberService.reissueToken(request));
     }
 }

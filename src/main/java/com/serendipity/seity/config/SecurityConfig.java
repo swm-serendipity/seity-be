@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/signup").permitAll()
+                        .requestMatchers("/auth/reissue").permitAll()
                         .requestMatchers("/test").hasRole("USER")
                         .anyRequest().authenticated()
                 )

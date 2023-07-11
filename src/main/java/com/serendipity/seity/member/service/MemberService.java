@@ -3,10 +3,12 @@ package com.serendipity.seity.member.service;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.member.MemberPart;
 import com.serendipity.seity.member.MemberRole;
+import com.serendipity.seity.member.auth.refreshtoken.RefreshToken;
+import com.serendipity.seity.member.auth.refreshtoken.repository.RefreshTokenRedisRepository;
 import com.serendipity.seity.member.dto.*;
 import com.serendipity.seity.member.auth.provider.JwtTokenProvider;
 import com.serendipity.seity.member.repository.MemberRepository;
-import com.serendipity.seity.redis.repository.RedisTemplateRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,7 +16,9 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import static com.serendipity.seity.common.response.BaseResponseStatus.INVALID_REFRESH_TOKEN;
 import static com.serendipity.seity.member.Member.createMember;
 
 /**
@@ -31,7 +35,7 @@ public class MemberService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
-    private final RedisTemplateRepository redisTemplateRepository;
+    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     /**
      * 로그인 메서드입니다.
@@ -52,8 +56,12 @@ public class MemberService {
         TokenDto tokenDto = jwtTokenProvider.generateToken(authentication);
 
         // 4. refresh token을 redis에 저장
-        redisTemplateRepository.storeString(request.getLoginId(), tokenDto.getRefreshToken());
-        
+        refreshTokenRedisRepository.save(RefreshToken.builder()
+                .id(authentication.getName())
+                .authorities(authentication.getAuthorities())
+                .refreshToken(tokenDto.getRefreshToken())
+                .build());
+
         return new LoginResponse(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
     }
 
@@ -68,5 +76,49 @@ public class MemberService {
                 request.getName(), request.getLoginId(), request.getEmail(), request.getBirthDate(),
                 MemberRole.getRole(request.getMemberRole()), MemberPart.getPart(request.getPart()))).getId());
 
+    }
+
+    /**
+     * 토큰 재발급 메서드입니다.
+     *
+     * @return 재발급된 토큰 정보
+     */
+    public LoginResponse reissueToken(HttpServletRequest request) throws BaseException {
+
+        // 1. request header 에서 JWT 토큰 추출
+        String token = resolveToken(request);
+
+        // 2. 토큰 유효성 검사
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+
+            // 3. 저장된 refresh token 찾기
+            RefreshToken refreshToken = refreshTokenRedisRepository.findByRefreshToken(token);
+
+            if (refreshToken != null) {
+
+                // 4. token 재발급
+                TokenDto tokenDto = jwtTokenProvider.generateToken(refreshToken.getId(), refreshToken.getAuthorities());
+
+                // 5. redis update
+                refreshTokenRedisRepository.save(RefreshToken.builder()
+                                .id(refreshToken.getId())
+                                .authorities(refreshToken.getAuthorities())
+                                .refreshToken(tokenDto.getRefreshToken())
+                                .build());
+
+                return new LoginResponse(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
+            }
+        }
+
+        throw new BaseException(INVALID_REFRESH_TOKEN);
+    }
+
+    // Request Header 에서 토큰 정보 추출
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

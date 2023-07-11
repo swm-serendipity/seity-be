@@ -26,7 +26,9 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         String token = resolveToken((HttpServletRequest) request);
 
         // 2. validateToken 으로 토큰 유효성 검사
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        // 토큰 재발급의 경우 access token 대신 refresh token을 넣어서 request를 보내게 되는데, 이 경우는 필터를 거치지 않도록 설정
+        if (token != null && jwtTokenProvider.validateToken(token) &&
+                !((HttpServletRequest) request).getRequestURI().equals("/auth/reissue")) {
             // 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext 에 저장
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);

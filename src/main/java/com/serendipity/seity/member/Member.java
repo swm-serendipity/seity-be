@@ -94,7 +94,7 @@ public class Member extends BaseTimeEntity implements UserDetails {
     }
 
     private Member(String password, String name, String loginId, String email, LocalDate birthDate, MemberPart part,
-                   MemberStatus status) {
+                   MemberStatus status, MemberRole role) {
 
         this.password = password;
         this.name = name;
@@ -103,7 +103,7 @@ public class Member extends BaseTimeEntity implements UserDetails {
         this.birthDate = birthDate;
         this.part = part;
         this.status = status;
-        this.roles.add(USER.getCode());     // TODO: 회원가입 시점부터 관리자 권한을 얻는 것이 가능한지 의논 필요
+        this.roles.add(role.getCode());
     }
 
     /**
@@ -115,11 +115,12 @@ public class Member extends BaseTimeEntity implements UserDetails {
      * @param email 이메일
      * @param birthDate 생년월일
      * @param part 직무
+     * @param role 직책
      * @return 생성된 member entity
      */
     public static Member createMember(String password, String name, String loginId, String email,
-                                      LocalDate birthDate, MemberPart part) {
+                                      LocalDate birthDate, MemberPart part, MemberRole role) {
 
-        return new Member(password, name, loginId, email, birthDate, part, MemberStatus.WAITING_APPROVE);
+        return new Member(password, name, loginId, email, birthDate, part, MemberStatus.WAITING_APPROVE, role);
     }
 }

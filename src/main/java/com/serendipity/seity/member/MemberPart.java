@@ -20,7 +20,7 @@ public enum MemberPart {
         this.value = value;
     }
 
-    public static MemberPart getPart(String part) throws BaseException {
+    public static MemberPart of(String part) throws BaseException {
 
         for (MemberPart value: MemberPart.values()) {
 

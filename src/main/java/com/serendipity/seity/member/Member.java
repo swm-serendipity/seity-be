@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.serendipity.seity.member.MemberRole.USER;
 
 /**
  * member 도메인 클래스입니다.

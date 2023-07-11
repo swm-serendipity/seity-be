@@ -1,6 +1,6 @@
 spring:
-  # mysql
   datasource:
+    # mysql
     url: jdbc:mysql://${rds.hostname}:${rds.port}/${rds.db.name}
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${rds.username}
@@ -11,9 +11,25 @@ spring:
     open-in-view: true
     hibernate:
       ddl-auto: none
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
   messages:
     basename: i18n/exception
     encoding: UTF-8
+
+  # 파일 업로드 크기 설정
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  # redis
+  data:
+    redis:
+      port: ${redis.port}
+      host: ${redis.hostname}
+
+logging.level:
+  org.hibernate.SQL: info
+
+jwt:
+  secret: ${jwt.secret.key}

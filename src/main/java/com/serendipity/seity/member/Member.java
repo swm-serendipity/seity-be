@@ -4,17 +4,17 @@ import com.serendipity.seity.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.serendipity.seity.member.MemberSecurityRole.USER;
 
 /**
  * member 도메인 클래스입니다.
@@ -108,6 +108,7 @@ public class Member extends BaseTimeEntity implements UserDetails {
         this.memberRole = memberRole;
         this.part = part;
         this.status = status;
+        this.roles.add(USER.getCode());     // TODO: 회원가입 시점부터 관리자 권한을 얻는 것이 가능한지 의논 필요
     }
 
     /**

@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+/**
+ * 공통 예외 처리 메서드입니다.
+ *
+ * @author Min Ho CHO
+ */
 @RestControllerAdvice
 public class CustomRestExceptionHandler {
 

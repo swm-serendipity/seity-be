@@ -1,10 +1,10 @@
 spring:
   datasource:
     # mysql
-    url: jdbc:mysql://${rds.hostname}:${rds.port}/${rds.db.name}
+    url: jdbc:mysql://${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DB_NAME}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${rds.username}
-    password: ${rds.password}
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
 
   # jpa
   jpa:
@@ -25,11 +25,11 @@ spring:
   # redis
   data:
     redis:
-      port: ${redis.port}
-      host: ${redis.hostname}
+      port: ${REDIS_PORT}
+      host: ${REDIS_HOSTNAME}
 
 logging.level:
   org.hibernate.SQL: info
 
 jwt:
-  secret: ${jwt.secret.key}
+  secret: ${JWT_SECRET_KEY}

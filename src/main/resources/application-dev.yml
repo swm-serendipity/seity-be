@@ -29,7 +29,7 @@ spring:
     # redis
     redis:
       port: 6379
-      host: 15.165.130.85
+      host: localhost
 
     # mongodb
     mongodb:

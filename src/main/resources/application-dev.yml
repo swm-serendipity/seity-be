@@ -29,12 +29,13 @@ spring:
     # redis
     redis:
       port: 6379
-      host: localhost
+      host: 15.165.130.85
 
     # mongodb
     mongodb:
       host: localhost
       port: 27017
+      database: seity
 
 logging.level:
   org.hibernate.SQL: debug
@@ -43,3 +44,6 @@ logging.level:
 jwt:
   secret: testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
 
+openai:
+  url: https://api.openai.com/v1/chat/completions
+  key: ${openapi.key}

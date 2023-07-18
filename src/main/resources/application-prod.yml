@@ -28,8 +28,18 @@ spring:
       port: ${REDIS_PORT}
       host: ${REDIS_HOSTNAME}
 
+    # mongodb
+    mongodb:
+      host: ${MONGO_HOSTNAME}
+      port: ${MONGO_PORT}
+      database: ${MONGO_DB_NAME}
+
 logging.level:
   org.hibernate.SQL: info
 
 jwt:
   secret: ${JWT_SECRET_KEY}
+
+openai:
+  url: https://api.openai.com/v1/chat/completions
+  key: ${OPENAI.KEY}

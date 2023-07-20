@@ -4,10 +4,14 @@ import com.serendipity.seity.member.Member;
 import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
 import com.serendipity.seity.prompt.dto.ChatGptMessageRequest;
+import com.serendipity.seity.prompt.dto.PromptResponse;
 import com.serendipity.seity.prompt.repository.PromptRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +46,6 @@ public class PromptService {
      */
     @Async
     public void saveAnswer(String id, Qna qna, Member member) {
-
         promptRepository.save(createPrompt(id, member.getId(), "ChatGPT", false, qna));
     }
 
@@ -51,7 +54,7 @@ public class PromptService {
      * @param sessionId session id
      * @return 이전에 했던 모든 질문들
      */
-    public List<ChatGptMessageRequest> getAllPromptById(String sessionId) {
+    public List<ChatGptMessageRequest> getPromptById(String sessionId) {
 
         Optional<Prompt> findPrompt = promptRepository.findById(sessionId);
         List<ChatGptMessageRequest> result = new ArrayList<>();
@@ -82,5 +85,25 @@ public class PromptService {
             prompt.addQna(qna);
             promptRepository.save(prompt);
         });
+    }
+
+    /**
+     * 최신 순으로 N개의 프롬프트 세션을 반환하는 메서드입니다.
+     * @param userId 사용자 id
+     * @param pageNumber page number
+     * @param pageSize page size
+     * @return 조회된 프롬프트 리스트
+     */
+    public List<PromptResponse> getLatestPromptsByUserId(String userId, int pageNumber, int pageSize) {
+
+        Pageable pageable =
+                PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "lastModifiedTime"));
+
+        List<PromptResponse> result = new ArrayList<>();
+        for (Prompt prompt: promptRepository.findByUserIdOrderByLastModifiedTimeDesc(userId, pageable)) {
+            result.add(PromptResponse.of(prompt));
+        }
+
+        return result;
     }
 }

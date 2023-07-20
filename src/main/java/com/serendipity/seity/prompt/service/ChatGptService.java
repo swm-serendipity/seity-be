@@ -69,7 +69,7 @@ public class ChatGptService {
      */
     public Flux<String> ask(String id, String question) throws JsonProcessingException {
 
-        List<ChatGptMessageRequest> messages = promptService.getAllPromptById(id);
+        List<ChatGptMessageRequest> messages = promptService.getPromptById(id);
         messages.add(new ChatGptMessageRequest("user", question));
 
         ChatGptRequest chatGptRequest = new ChatGptRequest(

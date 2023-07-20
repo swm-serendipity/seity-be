@@ -2,6 +2,7 @@ package com.serendipity.seity.prompt.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.serendipity.seity.common.exception.BaseException;
+import com.serendipity.seity.common.response.BaseResponse;
 import com.serendipity.seity.member.service.MemberService;
 import com.serendipity.seity.prompt.Qna;
 import com.serendipity.seity.prompt.dto.QuestionRequest;
@@ -68,5 +69,20 @@ public class PromptController {
             log.error(e.getMessage());
             return Flux.empty();
         }
+    }
+
+    /**
+     * 최근 작성한 프롬프트 리스트를 조회하는 메서드입니다.
+     * @param pageNumber page number
+     * @param pageSize page size
+     * @param principal 인증 정보
+     * @return 프롬프트 리스트
+     */
+    @GetMapping
+    public BaseResponse<?> getRecentPromptList(@RequestParam int pageNumber, @RequestParam int pageSize,
+                                               Principal principal) throws BaseException {
+
+        return new BaseResponse<>(promptService.getLatestPromptsByUserId(
+                memberService.getLoginMember(principal).getId(), pageNumber, pageSize));
     }
 }

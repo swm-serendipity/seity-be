@@ -73,6 +73,15 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	// Web Client
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// M1
+	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-aarch_64'
+
+	// json
+	implementation 'org.json:json:20230227'
+
 	testImplementation 'io.projectreactor:reactor-test'
 }
 

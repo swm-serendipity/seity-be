@@ -25,11 +25,17 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
 
-  # redis
   data:
+    # redis
     redis:
       port: 6379
       host: localhost
+
+    # mongodb
+    mongodb:
+      host: localhost
+      port: 27017
+      database: seity
 
 logging.level:
   org.hibernate.SQL: debug
@@ -38,3 +44,5 @@ logging.level:
 jwt:
   secret: testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
 
+openai:
+  url: https://api.openai.com/v1/chat/completions

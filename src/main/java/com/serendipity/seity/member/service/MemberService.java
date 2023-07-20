@@ -1,6 +1,7 @@
 package com.serendipity.seity.member.service;
 
 import com.serendipity.seity.common.exception.BaseException;
+import com.serendipity.seity.member.Member;
 import com.serendipity.seity.member.MemberPart;
 import com.serendipity.seity.member.MemberRole;
 import com.serendipity.seity.member.auth.refreshtoken.RefreshToken;
@@ -11,6 +12,7 @@ import com.serendipity.seity.member.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -18,7 +20,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.security.Principal;
+import java.util.Optional;
+
 import static com.serendipity.seity.common.response.BaseResponseStatus.INVALID_REFRESH_TOKEN;
+import static com.serendipity.seity.common.response.BaseResponseStatus.NO_LOGIN_USER;
 import static com.serendipity.seity.member.Member.createMember;
 
 /**
@@ -111,6 +117,17 @@ public class MemberService {
         }
 
         throw new BaseException(INVALID_REFRESH_TOKEN);
+    }
+
+    /**
+     * 현재 로그인한 사용자 정보를 불러오는 메서드입니다.
+     * @param principal 현재 인증 정보
+     * @return 로그인한 사용자
+     */
+    public Member getLoginMember(Principal principal) throws BaseException {
+
+        return memberRepository.findByLoginId(principal.getName())
+                .orElseThrow(() -> new BaseException(NO_LOGIN_USER));
     }
 
     // Request Header 에서 토큰 정보 추출

@@ -9,7 +9,6 @@ import com.serendipity.seity.config.ChatGptConfig;
 import com.serendipity.seity.prompt.dto.ChatGptRequest;
 import com.serendipity.seity.prompt.dto.ChatGptMessageRequest;
 import com.serendipity.seity.prompt.dto.QuestionResponse;
-import com.serendipity.seity.prompt.repository.PromptRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,32 +40,36 @@ public class ChatGptService {
     @Value("${openai.key}")
     private String openAiKey;
 
+    private final String AUTHORIZATION_HEADER = "Authorization";
+    private final String BEARER_PREFIX = "Bearer ";
+
+
+    private final PromptService promptService;
     private WebClient client;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 
-    private final PromptRepository promptRepository;
-
     @PostConstruct
     public void init() {
         client = WebClient.builder()
                 .baseUrl(openAiUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader("Authorization", "Bearer " + openAiKey)
+                .defaultHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + openAiKey)
                 .build();
     }
 
     /**
      * 질문 메서드입니다.
+     * @param id 해당 document의 id
      * @param question 질문
      * @return 답변에 대한 flux 객체
      * @throws JsonProcessingException json 파싱에서 예외가 발생한 경우
      */
-    public Flux<String> ask(String question) throws JsonProcessingException {
+    public Flux<String> ask(String id, String question) throws JsonProcessingException {
 
-        List<ChatGptMessageRequest> messages = new ArrayList<>();
+        List<ChatGptMessageRequest> messages = promptService.getAllPromptById(id);
         messages.add(new ChatGptMessageRequest("user", question));
 
         ChatGptRequest chatGptRequest = new ChatGptRequest(
@@ -99,7 +101,7 @@ public class ChatGptService {
                                     content = contentNode.isMissingNode() ? "" : contentNode.asText();
                                 } catch (NullPointerException ignored) { }
 
-                                return objectMapper2.writeValueAsString(new QuestionResponse(content));
+                                return objectMapper2.writeValueAsString(new QuestionResponse(id, content));
                             } catch (JsonProcessingException e) {
                                 // content 필드가 없는 경우 -> 응답이 끝난 경우
                                 e.printStackTrace();

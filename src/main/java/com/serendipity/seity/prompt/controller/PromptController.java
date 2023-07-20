@@ -36,14 +36,24 @@ public class PromptController {
     public Flux<String> ask(@RequestBody QuestionRequest question, Principal principal) {
 
         try {
-            Flux<String> answerFlux = chatGptService.ask(question.getQuestion());
+            boolean isNewQuestion = question.init();    // 처음 하는 질문인지 여부
+
+            Flux<String> answerFlux = chatGptService.ask(question.getSessionId(), question.getQuestion());
             String answerString = chatGptService.getAnswerStringFromFlux(answerFlux).toString();
 
             Mono<Void> saveAnswerMono =
                     Mono.fromRunnable(() -> {
                         try {
-                            promptService.saveAnswer(new Qna(question.getQuestion(), answerString),
-                                    memberService.getLoginMember(principal));
+                            if (isNewQuestion) {        // 처음 하는 질문일 경우
+                                promptService.saveAnswer(
+                                        question.getSessionId(),
+                                        new Qna(question.getQuestion(), answerString),
+                                        memberService.getLoginMember(principal));
+                            } else {                    // 이전 세션에 이어서 하는 질문일 경우
+                                promptService.addAnswer(
+                                        question.getSessionId(),
+                                        new Qna(question.getQuestion(), answerString));
+                            }
                         } catch (BaseException e) {
                             log.error("질문 저장 중 오류 발생: ", e);
                             e.printStackTrace();

@@ -14,5 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class QuestionResponse {
 
+    private String sessionId;
     private String answer;
 }

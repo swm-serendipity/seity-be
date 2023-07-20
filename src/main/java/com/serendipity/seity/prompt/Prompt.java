@@ -26,18 +26,19 @@ public class Prompt extends BaseTimeEntity {
     private boolean isFavorite;
     private List<Qna> qnaList;
 
-    private Prompt(String userId, String llm, boolean isFavorite, List<Qna> qnaList) {
+    private Prompt(String id, String userId, String llm, boolean isFavorite, List<Qna> qnaList) {
+        this.id = id;
         this.userId = userId;
         this.llm = llm;
         this.isFavorite = isFavorite;
         this.qnaList = qnaList;
     }
 
-    public static Prompt createPrompt(String userId, String llm, boolean isFavorite, Qna qna) {
+    public static Prompt createPrompt(String id, String userId, String llm, boolean isFavorite, Qna qna) {
 
         List<Qna> qnas = new ArrayList<>();
         qnas.add(qna);
-        return new Prompt(userId, llm, isFavorite, qnas);
+        return new Prompt(id, userId, llm, isFavorite, qnas);
     }
 
     public void addQna(Qna qna) {

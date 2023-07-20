@@ -33,6 +33,9 @@ spring:
       host: ${MONGO_HOSTNAME}
       port: ${MONGO_PORT}
       database: ${MONGO_DB_NAME}
+      username: ${MONGO_USERNAME}
+      password: ${MONGO_PASSWORD}
+      authentication-database: admin
 
 logging.level:
   org.hibernate.SQL: info
@@ -42,4 +45,4 @@ jwt:
 
 openai:
   url: https://api.openai.com/v1/chat/completions
-  key: ${OPENAI.KEY}
+  key: ${OPENAI_KEY}

@@ -1,8 +1,6 @@
 package com.serendipity.seity.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -19,7 +17,7 @@ public class AsyncConfig extends AsyncConfigurerSupport {
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(30);
         executor.setQueueCapacity(50);
-        executor.setThreadNamePrefix("DDAJA-ASYNC-");
+        executor.setThreadNamePrefix("SEITY-ASYNC-");
         executor.initialize();
         return executor;
     }

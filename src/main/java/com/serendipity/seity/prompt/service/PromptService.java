@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.serendipity.seity.common.response.BaseResponseStatus.INVALID_PROMPT_ID_EXCEPTION;
 import static com.serendipity.seity.common.response.BaseResponseStatus.INVALID_USER_ACCESS_EXCEPTION;
 import static com.serendipity.seity.prompt.Prompt.createPrompt;
 
@@ -53,11 +54,11 @@ public class PromptService {
     }
 
     /**
-     * sessionId를 기반으로 이전에 했던 모든 질문을 조회하는 메서드입니다,
+     * sessionId를 기반으로 이전에 했던 모든 질문을 조회하고 이를 통해 assistant 프롬프트를 생성하는 메서드입니다.
      * @param sessionId session id
      * @return 이전에 했던 모든 질문들
      */
-    public List<ChatGptMessageRequest> getPromptById(String sessionId) {
+    public List<ChatGptMessageRequest> generateAssistantPromptById(String sessionId) {
 
         Optional<Prompt> findPrompt = promptRepository.findById(sessionId);
         List<ChatGptMessageRequest> result = new ArrayList<>();
@@ -149,5 +150,24 @@ public class PromptService {
         }
 
         promptRepository.deleteById(id);
+    }
+
+    /**
+     * 프롬프트 세션 1개를 조회하는 메서드입니다.
+     * @param id 프롬프트 세션 id
+     * @param member 현재 로그인한 사용자
+     * @return 해당 프롬프트 세션의 정보
+     * @throws BaseException 유효하지 않은 세션 id이거나, 프롬프트 작성자와 로그인한 사용자가 다른 경우
+     */
+    public PromptResponse getPromptById(String id, Member member) throws BaseException {
+
+        Prompt findPrompt = promptRepository.findById(id)
+                .orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
+
+        if (!findPrompt.getUserId().equals(member.getId())) {
+            throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
+        }
+
+        return PromptResponse.of(findPrompt);
     }
 }

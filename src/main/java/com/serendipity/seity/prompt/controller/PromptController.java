@@ -129,4 +129,17 @@ public class PromptController {
         promptService.deletePrompt(sessionId, memberService.getLoginMember(principal));
         return new BaseResponse<>(SUCCESS);
     }
+
+    /**
+     * 프롬프트 세션 1개를 조회하는 메서드입니다.
+     * @param sessionId 프롬프트 세션 id
+     * @param principal 인증 정보
+     * @return 프롬프트 정보
+     * @throws BaseException 유효하지 않은 세션 id이거나, 로그인한 사용자와 프롬프트 작성자가 다른 경우
+     */
+    @GetMapping
+    public BaseResponse<?> getSinglePrompt(@RequestParam String sessionId, Principal principal) throws BaseException {
+
+        return new BaseResponse<>(promptService.getPromptById(sessionId, memberService.getLoginMember(principal)));
+    }
 }

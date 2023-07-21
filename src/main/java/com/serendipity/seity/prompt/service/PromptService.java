@@ -6,6 +6,7 @@ import com.serendipity.seity.member.Member;
 import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
 import com.serendipity.seity.prompt.dto.ChatGptMessageRequest;
+import com.serendipity.seity.prompt.dto.PromptPagingResponse;
 import com.serendipity.seity.prompt.dto.PromptResponse;
 import com.serendipity.seity.prompt.repository.PromptRepository;
 import jakarta.transaction.Transactional;
@@ -98,14 +99,14 @@ public class PromptService {
      * @param pageSize page size
      * @return 조회된 프롬프트 리스트
      */
-    public List<PromptResponse> getLatestPromptsByUserId(String userId, int pageNumber, int pageSize) {
+    public List<PromptPagingResponse> getLatestPromptsByUserId(String userId, int pageNumber, int pageSize) {
 
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "lastModifiedTime"));
 
-        List<PromptResponse> result = new ArrayList<>();
+        List<PromptPagingResponse> result = new ArrayList<>();
         for (Prompt prompt: promptRepository.findByUserIdOrderByLastModifiedTimeDesc(userId, pageable)) {
-            result.add(PromptResponse.of(prompt));
+            result.add(PromptPagingResponse.of(prompt));
         }
 
         return result;

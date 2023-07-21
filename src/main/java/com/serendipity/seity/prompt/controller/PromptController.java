@@ -80,7 +80,7 @@ public class PromptController {
      * @param principal 인증 정보
      * @return 프롬프트 리스트
      */
-    @GetMapping
+    @GetMapping("/history")
     public BaseResponse<?> getRecentPromptList(@RequestParam int pageNumber, @RequestParam int pageSize,
                                                Principal principal) throws BaseException {
 

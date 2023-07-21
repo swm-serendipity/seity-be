@@ -144,7 +144,7 @@ public class PromptService {
             return;
         }
 
-        if (!findPrompt.get().getId().equals(member.getId())) {
+        if (!findPrompt.get().getUserId().equals(member.getId())) {
             throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
         }
 

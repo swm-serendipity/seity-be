@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.serendipity.seity.common.response.BaseResponseStatus.INVALID_USER_ACCESS_EXCEPTION;
 import static com.serendipity.seity.prompt.Prompt.createPrompt;
 
 /**
@@ -112,6 +113,9 @@ public class PromptService {
     /**
      * 1개의 프롬프트 세션에 대해 즐겨찾기를 설정 또는 해제하는 메서드입니다.
      * @param id 프롬프트 세션 id
+     * @param favorite 즐겨찾기 설정/해제 여부
+     * @param member 로그인한 사용자
+     * @throws BaseException 로그인한 사용자와 삭제하려는 프롬프트의 사용자 id가 다를 경우
      */
     public void setFavoritePrompt(String id, boolean favorite, Member member) throws BaseException {
 
@@ -119,11 +123,31 @@ public class PromptService {
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.INVALID_PROMPT_ID_EXCEPTION));
 
         if (!findPrompt.getUserId().equals(member.getId())) {
-            throw new BaseException(BaseResponseStatus.INVALID_USER_ACCESS_EXCEPTION);
+            throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
         }
 
         findPrompt.setFavorite(favorite);
         promptRepository.save(findPrompt);
     }
 
+    /**
+     * 프롬프트 세션 1개를 삭제하는 메서드입니다.
+     * @param id 프롬프트 세션 id
+     * @param member 로그인한 사용자
+     * @throws BaseException 로그인한 사용자와 삭제하려는 프롬프트의 사용자 id가 다를 경우
+     */
+    public void deletePrompt(String id, Member member) throws BaseException {
+
+        Optional<Prompt> findPrompt = promptRepository.findById(id);
+
+        if (findPrompt.isEmpty()) {
+            return;
+        }
+
+        if (!findPrompt.get().getId().equals(member.getId())) {
+            throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
+        }
+
+        promptRepository.deleteById(id);
+    }
 }

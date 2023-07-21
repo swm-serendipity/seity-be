@@ -115,4 +115,18 @@ public class PromptController {
         promptService.setFavoritePrompt(sessionId, false, memberService.getLoginMember(principal));
         return new BaseResponse<>(SUCCESS);
     }
+
+    /**
+     * 프롬프트 세션 1개를 삭제하는 메서드입니다.
+     * @param sessionId 프롬프트 세션 id
+     * @param principal 인증 정보
+     * @return 성공 결과
+     * @throws BaseException 권한이 없는 유저가 접근한 경우
+     */
+    @DeleteMapping
+    public BaseResponse<?> deletePrompt(@RequestParam String sessionId, Principal principal) throws BaseException {
+
+        promptService.deletePrompt(sessionId, memberService.getLoginMember(principal));
+        return new BaseResponse<>(SUCCESS);
+    }
 }

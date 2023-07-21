@@ -27,7 +27,7 @@ public class Prompt {
     private boolean isFavorite;
     private List<Qna> qnaList;
 
-    private LocalDateTime createTime;       // @Async 애노테이션을 사용할 경우 Auditing 적용 안됨
+    private LocalDateTime createTime;       // @Async 애노테이션을 사용할 경우 Auditing 적용 안되는 이슈
 
     @LastModifiedDate
     private LocalDateTime lastModifiedTime;
@@ -51,6 +51,10 @@ public class Prompt {
     public void addQna(Qna qna) {
 
         qnaList.add(qna);
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.isFavorite = favorite;
     }
 
 }

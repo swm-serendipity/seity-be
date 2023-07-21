@@ -18,6 +18,8 @@ import reactor.core.scheduler.Schedulers;
 
 import java.security.Principal;
 
+import static com.serendipity.seity.common.response.BaseResponseStatus.SUCCESS;
+
 /**
  * 프롬프트 컨트롤러입니다.
  *
@@ -84,5 +86,33 @@ public class PromptController {
 
         return new BaseResponse<>(promptService.getLatestPromptsByUserId(
                 memberService.getLoginMember(principal).getId(), pageNumber, pageSize));
+    }
+
+    /**
+     * 프롬프트 세션 1개에 대해 즐겨찾기를 하는 메서드입니다.
+     * @param sessionId 프롬프트 세션 id
+     * @param principal 인증 정보
+     * @return 성공 결과
+     * @throws BaseException id가 유효하지 않거나, 권한이 없는 유저가 접근한 경우
+     */
+    @PostMapping("/favorite")
+    public BaseResponse<?> setFavoritePrompt(@RequestParam String sessionId, Principal principal) throws BaseException {
+
+        promptService.setFavoritePrompt(sessionId, true, memberService.getLoginMember(principal));
+        return new BaseResponse<>(SUCCESS);
+    }
+
+    /**
+     * 프롬프트 세션 1개에 대해 즐겨찾기를 해제하는 메서드입니다.
+     * @param sessionId 프롬프트 세션 id
+     * @param principal 인증 정보
+     * @return 성공 결과
+     * @throws BaseException id가 유효하지 않거나, 권한이 없는 유저가 접근한 경우
+     */
+    @DeleteMapping("/favorite")
+    public BaseResponse<?> unsetFavoritePrompt(@RequestParam String sessionId, Principal principal) throws BaseException {
+
+        promptService.setFavoritePrompt(sessionId, false, memberService.getLoginMember(principal));
+        return new BaseResponse<>(SUCCESS);
     }
 }

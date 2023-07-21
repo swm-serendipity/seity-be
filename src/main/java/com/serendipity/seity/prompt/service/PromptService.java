@@ -1,5 +1,7 @@
 package com.serendipity.seity.prompt.service;
 
+import com.serendipity.seity.common.exception.BaseException;
+import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.member.Member;
 import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
@@ -106,4 +108,22 @@ public class PromptService {
 
         return result;
     }
+
+    /**
+     * 1개의 프롬프트 세션에 대해 즐겨찾기를 설정 또는 해제하는 메서드입니다.
+     * @param id 프롬프트 세션 id
+     */
+    public void setFavoritePrompt(String id, boolean favorite, Member member) throws BaseException {
+
+        Prompt findPrompt = promptRepository.findById(id)
+                .orElseThrow(() -> new BaseException(BaseResponseStatus.INVALID_PROMPT_ID_EXCEPTION));
+
+        if (!findPrompt.getUserId().equals(member.getId())) {
+            throw new BaseException(BaseResponseStatus.INVALID_USER_ACCESS_EXCEPTION);
+        }
+
+        findPrompt.setFavorite(favorite);
+        promptRepository.save(findPrompt);
+    }
+
 }

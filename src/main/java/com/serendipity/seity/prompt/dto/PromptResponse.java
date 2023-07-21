@@ -20,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 public class PromptResponse {
 
+    private String id;
     private String llm;
     private List<Qna> qnaList;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
@@ -29,7 +30,7 @@ public class PromptResponse {
     private boolean isFavorite;
 
     public static PromptResponse of(Prompt prompt) {
-        return new PromptResponse(prompt.getLlm(), prompt.getQnaList(), prompt.getCreateTime(),
+        return new PromptResponse(prompt.getId(), prompt.getLlm(), prompt.getQnaList(), prompt.getCreateTime(),
                 prompt.getLastModifiedTime(), prompt.isFavorite());
     }
 }

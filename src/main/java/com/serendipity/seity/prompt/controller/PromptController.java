@@ -11,6 +11,7 @@ import com.serendipity.seity.prompt.service.PromptService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,7 +37,7 @@ public class PromptController {
     private final ChatGptService chatGptService;
 
     @PostMapping(value = "/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> ask(@RequestBody QuestionRequest question, Principal principal) {
+    public ResponseEntity<Flux<String>> ask(@RequestBody QuestionRequest question, Principal principal) {
 
         try {
             boolean isNewQuestion = question.init();    // 처음 하는 질문인지 여부
@@ -66,10 +67,13 @@ public class PromptController {
 
             saveAnswerMono.subscribeOn(Schedulers.boundedElastic()).subscribe();
 
-            return answerFlux;
+            return ResponseEntity.ok()
+                    .header("X-Accel-Buffering", "no") // nginx 버퍼링 해제
+                    .body(answerFlux);
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
-            return Flux.empty();
+            return ResponseEntity.ok()
+                    .body(Flux.empty());
         }
     }
 

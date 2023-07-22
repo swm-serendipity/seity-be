@@ -15,5 +15,5 @@ import java.util.List;
 @Repository
 public interface PromptRepository extends MongoRepository<Prompt, String> {
 
-    List<Prompt> findByUserIdOrderByLastModifiedTimeDesc(String userId, Pageable pageable);
+    List<Prompt> findByUserIdAndIsExistOrderByLastModifiedTimeDesc(String userId, boolean isExist, Pageable pageable);
 }

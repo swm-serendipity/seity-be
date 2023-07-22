@@ -3,6 +3,7 @@ package com.serendipity.seity.prompt.service;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.member.Member;
+import com.serendipity.seity.post.repository.PostRepository;
 import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
 import com.serendipity.seity.prompt.dto.ChatGptMessageRequest;
@@ -41,6 +42,7 @@ public class PromptService {
     private final String ASSISTANT_PREFIX = "assistant";
 
     private final PromptRepository promptRepository;
+    private final PostRepository postRepository;
 
     /**
      * ChatGPT API로부터 받은 답변을 저장하는 메서드입니다.
@@ -105,7 +107,7 @@ public class PromptService {
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "lastModifiedTime"));
 
         List<PromptPagingResponse> result = new ArrayList<>();
-        for (Prompt prompt: promptRepository.findByUserIdOrderByLastModifiedTimeDesc(userId, pageable)) {
+        for (Prompt prompt: promptRepository.findByUserIdAndIsExistOrderByLastModifiedTimeDesc(userId, true, pageable)) {
             result.add(PromptPagingResponse.of(prompt));
         }
 
@@ -150,6 +152,14 @@ public class PromptService {
             throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
         }
 
+        if (postRepository.findByPromptId(id).isPresent()) {
+
+            // 해당 프롬프트 세션으로 게시글이 생성된 경우 soft delete
+            findPrompt.get().delete();
+            promptRepository.save(findPrompt.get());
+            return;
+        }
+
         promptRepository.deleteById(id);
     }
 
@@ -164,6 +174,10 @@ public class PromptService {
 
         Prompt findPrompt = promptRepository.findById(id)
                 .orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
+
+        if (!findPrompt.isExist()) {
+            throw new BaseException(INVALID_PROMPT_ID_EXCEPTION);
+        }
 
         if (!findPrompt.getUserId().equals(member.getId())) {
             throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);

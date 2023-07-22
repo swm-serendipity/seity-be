@@ -2,6 +2,7 @@ package com.serendipity.seity.member.controller;
 
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
+import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.member.dto.LoginRequest;
 import com.serendipity.seity.member.dto.SignUpRequest;
 import com.serendipity.seity.member.service.MemberService;
@@ -9,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import static com.serendipity.seity.common.response.BaseResponseStatus.SUCCESS;
 
 
 /**
@@ -47,5 +50,14 @@ public class MemberController {
     public BaseResponse<?> reissueToken(HttpServletRequest request) throws BaseException {
 
         return new BaseResponse<>(memberService.reissueToken(request));
+    }
+
+    /**
+     * 로그인 테스트용 메서드입니다.
+     */
+    @GetMapping("/login/test")
+    public BaseResponse<?> loginTest() {
+
+        return new BaseResponse<>(SUCCESS);
     }
 }

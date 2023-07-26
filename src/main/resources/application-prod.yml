@@ -27,6 +27,7 @@ spring:
     redis:
       port: ${REDIS_PORT}
       host: ${REDIS_HOSTNAME}
+      password: ${REDIS_PASSWORD}
 
     # mongodb
     mongodb:

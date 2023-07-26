@@ -2,6 +2,7 @@ package com.serendipity.seity.prompt.service;
 
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponseStatus;
+import com.serendipity.seity.config.ChatGptConfig;
 import com.serendipity.seity.member.Member;
 import com.serendipity.seity.post.repository.PostRepository;
 import com.serendipity.seity.prompt.Prompt;
@@ -16,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,60 +38,28 @@ import static com.serendipity.seity.prompt.Prompt.createPrompt;
 @RequiredArgsConstructor
 public class PromptService {
 
-    private final String USER_PREFIX = "user";
-    private final String ASSISTANT_PREFIX = "assistant";
-
     private final PromptRepository promptRepository;
     private final PostRepository postRepository;
 
     /**
-     * ChatGPT API로부터 받은 답변을 저장하는 메서드입니다.
-     * TODO: LLM 추가 시 llm 필드 변수화
-     * @param id 해당 document의 id
-     * @param qna 질문과 답변 쌍
+     * 프롬프트 질의 1개를 저장하는 메서드입니다.
+     * @param id 프롬프트 id
+     * @param question 질문
+     * @param answer 답변
      * @param member 현재 로그인한 사용자
      */
-    @Async
-    public void saveAnswer(String id, Qna qna, Member member) {
-        promptRepository.save(createPrompt(id, member.getId(), "ChatGPT", false, qna));
-    }
-
-    /**
-     * sessionId를 기반으로 이전에 했던 모든 질문을 조회하고 이를 통해 assistant 프롬프트를 생성하는 메서드입니다.
-     * @param sessionId session id
-     * @return 이전에 했던 모든 질문들
-     */
-    public List<ChatGptMessageRequest> generateAssistantPromptById(String sessionId) {
-
-        Optional<Prompt> findPrompt = promptRepository.findById(sessionId);
-        List<ChatGptMessageRequest> result = new ArrayList<>();
-
-        if (findPrompt.isEmpty()) {
-            return result;
-        }
-
-        for (Qna qna : findPrompt.get().getQnaList()) {
-
-            result.add(new ChatGptMessageRequest(USER_PREFIX, qna.getQuestion()));
-            result.add(new ChatGptMessageRequest(ASSISTANT_PREFIX, qna.getAnswer()));
-        }
-
-        return result;
-    }
-
-    /**
-     * 이전 세션에 새로 한 질문을 추가하는 메서드입니다.
-     * @param id document의 id
-     * @param qna 새로 한 질문과 답변
-     */
-    @Async
-    public void addAnswer(String id, Qna qna) {
+    public void savePrompt(String id, String question, String answer, Member member) throws BaseException {
 
         Optional<Prompt> findPrompt = promptRepository.findById(id);
-        findPrompt.ifPresent(prompt -> {
-            prompt.addQna(qna);
-            promptRepository.save(prompt);
-        });
+
+        if (findPrompt.isEmpty()) {
+            promptRepository.save(createPrompt(id, member.getId(), "ChatGPT",
+                    new Qna(question, answer)));
+            return;
+        }
+
+        findPrompt.get().addQna(new Qna(question, answer));
+        promptRepository.save(findPrompt.get());
     }
 
     /**
@@ -184,5 +152,50 @@ public class PromptService {
         }
 
         return PromptResponse.of(findPrompt);
+    }
+
+    /**
+     * assistant request를 생성하는 메서드입니다.
+     * @param id 프롬프트 세션 id
+     * @return 생성된 assistant request
+     * @throws BaseException 프롬프트 세션 id가 유효하지 않은 경우
+     */
+    public List<ChatGptMessageRequest> generateAssistantRequest(String id) throws BaseException {
+
+        if (id == null) {
+            return new ArrayList<>();
+        }
+
+        Prompt findPrompt =
+                promptRepository.findById(id).orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
+
+        List<ChatGptMessageRequest> result = new ArrayList<>();
+        for (Qna qna : findPrompt.getQnaList()) {
+            result.add(new ChatGptMessageRequest(ChatGptConfig.USER_ROLE, qna.getQuestion()));
+            result.add(new ChatGptMessageRequest(ChatGptConfig.ASSISTANT_ROLE, qna.getAnswer()));
+        }
+
+        return result;
+    }
+
+    /**
+     * continue generating을 할 때 assistant request를 생성하는 메서드입니다.
+     * @param id 프롬프트 세션 id
+     * @return 생성된 assistant request
+     * @throws BaseException 프롬프트 세션 id가 유효하지 않은 경우
+     */
+    public List<ChatGptMessageRequest> generateAssistantRequestForContinueAsk(String id) throws BaseException {
+
+        Prompt findPrompt =
+                promptRepository.findById(id).orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
+
+        List<ChatGptMessageRequest> result = new ArrayList<>();
+
+        result.add(new ChatGptMessageRequest(ChatGptConfig.USER_ROLE,
+                findPrompt.getQnaList().get(findPrompt.getQnaList().size() - 1).getQuestion()));
+        result.add(new ChatGptMessageRequest(ChatGptConfig.ASSISTANT_ROLE,
+                findPrompt.getQnaList().get(findPrompt.getQnaList().size() - 1).getAnswer()));
+
+        return result;
     }
 }

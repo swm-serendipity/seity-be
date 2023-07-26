@@ -43,11 +43,11 @@ public class Prompt {
         this.isExist = true;
     }
 
-    public static Prompt createPrompt(String id, String userId, String llm, boolean isFavorite, Qna qna) {
+    public static Prompt createPrompt(String id, String userId, String llm, Qna qna) {
 
         List<Qna> qnas = new ArrayList<>();
         qnas.add(qna);
-        return new Prompt(id, userId, llm, isFavorite, qnas);
+        return new Prompt(id, userId, llm, false, qnas);
     }
 
     public void addQna(Qna qna) {

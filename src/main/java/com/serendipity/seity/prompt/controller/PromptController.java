@@ -1,11 +1,13 @@
 package com.serendipity.seity.prompt.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
+import com.serendipity.seity.config.ChatGptConfig;
 import com.serendipity.seity.member.service.MemberService;
-import com.serendipity.seity.prompt.Qna;
-import com.serendipity.seity.prompt.dto.QuestionRequest;
+import com.serendipity.seity.prompt.dto.*;
 import com.serendipity.seity.prompt.service.ChatGptService;
 import com.serendipity.seity.prompt.service.PromptService;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +16,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.serendipity.seity.common.response.BaseResponseStatus.SUCCESS;
 
@@ -36,40 +39,67 @@ public class PromptController {
     private final MemberService memberService;
     private final ChatGptService chatGptService;
 
+    /**
+     * 프롬프트 질의 메서드입니다.
+     * @param request 세션 id, 질문
+     * @param principal 인증 정보
+     * @return 답변 stream
+     * @throws BaseException 로그인한 사용자가 유효하지 않거나, session id 가 유효하지 않은 경우
+     */
     @PostMapping(value = "/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<Flux<String>> ask(@RequestBody QuestionRequest question, Principal principal) {
+    public ResponseEntity<Flux<String>> ask(@RequestBody PromptAskRequest request, Principal principal)
+            throws BaseException {
 
         try {
-            boolean isNewQuestion = question.init();    // 처음 하는 질문인지 여부
+            List<ChatGptMessageRequest> previousPromptList = request.getQuestion() == null
+                    ? new ArrayList<>() : promptService.generateAssistantRequest(request.getSessionId());
 
-            Flux<String> answerFlux = chatGptService.ask(question.getSessionId(), question.getQuestion());
-            String answerString = chatGptService.getAnswerStringFromFlux(answerFlux).toString();
+            request.init();
 
-            Mono<Void> saveAnswerMono =
-                    Mono.fromRunnable(() -> {
-                        try {
-                            if (isNewQuestion) {        // 처음 하는 질문일 경우
-                                promptService.saveAnswer(
-                                        question.getSessionId(),
-                                        new Qna(question.getQuestion(), answerString),
-                                        memberService.getLoginMember(principal));
-                            } else {                    // 이전 세션에 이어서 하는 질문일 경우
-                                promptService.addAnswer(
-                                        question.getSessionId(),
-                                        new Qna(question.getQuestion(), answerString));
-                            }
-                        } catch (BaseException e) {
-                            log.error("질문 저장 중 오류 발생: ", e);
-                            e.printStackTrace();
-                            throw new RuntimeException(e);
-                        }
-                    });
+            Flux<String> responseFlux = chatGptService.ask(
+                    previousPromptList,
+                    request.getSessionId(),
+                    request.getQuestion());
 
-            saveAnswerMono.subscribeOn(Schedulers.boundedElastic()).subscribe();
+            subscribeToSaveAnswer(responseFlux, request.getQuestion(), principal);
 
             return ResponseEntity.ok()
-                    .header("X-Accel-Buffering", "no") // nginx 버퍼링 해제
-                    .body(answerFlux);
+                    .header(ChatGptConfig.NGINX_NO_BUFFERING_HEADER,
+                            ChatGptConfig.NGINX_NO_BUFFERING_HEADER_VALUE) // nginx 버퍼링 해제
+                    .body(responseFlux);
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.ok()
+                    .body(Flux.empty());
+        }
+    }
+
+    /**
+     * 답변이 잘린 경우, 이어서 답변하는 메서드입니다.
+     * @param sessionId 세션 id
+     * @param principal 인증 정보
+     * @return 답변 stream
+     * @throws BaseException 로그인한 사용자가 유효하지 않거나, session id 가 유효하지 않은 경우
+     */
+    @PostMapping(value = "/ask/continue", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<Flux<String>> continueAsk(@RequestParam String sessionId, Principal principal)
+            throws BaseException {
+
+        try {
+            List<ChatGptMessageRequest> previousPromptList =
+                    promptService.generateAssistantRequestForContinueAsk(sessionId);
+
+            Flux<String> responseFlux = chatGptService.ask(
+                    previousPromptList,
+                    sessionId,
+                    null);
+
+            subscribeToSaveAnswer(responseFlux, ChatGptConfig.CONTINUE_GENERATING_QUESTION, principal);
+
+            return ResponseEntity.ok()
+                    .header(ChatGptConfig.NGINX_NO_BUFFERING_HEADER,
+                            ChatGptConfig.NGINX_NO_BUFFERING_HEADER_VALUE) // nginx 버퍼링 해제
+                    .body(responseFlux);
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
             return ResponseEntity.ok()
@@ -145,5 +175,60 @@ public class PromptController {
     public BaseResponse<?> getSinglePrompt(@RequestParam String sessionId, Principal principal) throws BaseException {
 
         return new BaseResponse<>(promptService.getPromptById(sessionId, memberService.getLoginMember(principal)));
+    }
+
+    /**
+     * 완성된 flux로부터 답변을 추출하는 메서드입니다.
+     * @param jsonString json 문자열
+     * @return 완성된 답변
+     */
+    private String extractAnswer(String jsonString, String targetString) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonString);
+
+            if (jsonNode.has(targetString)) {
+                return jsonNode.get(targetString).asText();
+                // 가정: "answer" 값이 정수형이라고 가정합니다.
+            }
+
+            return "";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return "";
+    }
+
+    /**
+     * 완성된 답변을 저장하기 위해 subscribe를 수행하는 메서드입니다.
+     * @param flux flux 객체
+     * @param question 질문
+     * @param principal 인증 정보
+     */
+    private void subscribeToSaveAnswer(Flux<String> flux, String question, Principal principal) {
+        flux
+                .collectList().publishOn(Schedulers.boundedElastic()) // Collect all the strings from the Flux into a List<String>
+                .map(strings -> {
+                    StringBuilder answer = new StringBuilder();
+                    String sessionId = null;
+                    for (String str: strings) {
+                        answer.append(extractAnswer(str, "answer"));
+
+                        if (sessionId == null && !extractAnswer(str, "sessionId").isBlank()) {
+                            sessionId = extractAnswer(str, "sessionId");
+                        }
+                    }
+
+                    try {
+                        promptService.savePrompt(sessionId, question, answer.toString(),
+                                memberService.getLoginMember(principal));
+                    } catch (BaseException e) {
+                        e.printStackTrace();
+                        return "";
+                    }
+                    return strings;
+                })
+                .subscribe(); // Subscribe to trigger the processing of the Flux
     }
 }

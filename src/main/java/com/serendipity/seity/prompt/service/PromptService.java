@@ -68,6 +68,8 @@ public class PromptService {
      * @param pageNumber page number
      * @param pageSize page size
      * @return 조회된 프롬프트 리스트
+     * TODO: 기존 for문 제거하고 람다식으로 진행
+     * TODO: 포매팅을 제거 -> 원본 데이터를 넘겨버리고 클라이언트가 선택
      */
     public List<PromptPagingResponse> getLatestPromptsByUserId(String userId, int pageNumber, int pageSize) {
 

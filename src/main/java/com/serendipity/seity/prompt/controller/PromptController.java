@@ -189,7 +189,6 @@ public class PromptController {
 
             if (jsonNode.has(targetString)) {
                 return jsonNode.get(targetString).asText();
-                // 가정: "answer" 값이 정수형이라고 가정합니다.
             }
 
             return "";

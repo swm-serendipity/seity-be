@@ -2,12 +2,14 @@ package com.serendipity.seity.member;
 
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponseStatus;
+import lombok.Getter;
 
 /**
  * member의 부서를 나타내는 enum 클래스입니다.
  *
  * @author Min Ho CHO
  */
+@Getter
 public enum MemberPart {
 
     FRONT_END("FRONT_END"),

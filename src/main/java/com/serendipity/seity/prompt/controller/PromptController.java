@@ -10,6 +10,7 @@ import com.serendipity.seity.member.service.MemberService;
 import com.serendipity.seity.prompt.dto.*;
 import com.serendipity.seity.prompt.service.ChatGptService;
 import com.serendipity.seity.prompt.service.PromptService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -47,7 +48,7 @@ public class PromptController {
      * @throws BaseException 로그인한 사용자가 유효하지 않거나, session id 가 유효하지 않은 경우
      */
     @PostMapping(value = "/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<Flux<String>> ask(@RequestBody PromptAskRequest request, Principal principal)
+    public ResponseEntity<Flux<String>> ask(@Valid @RequestBody PromptAskRequest request, Principal principal)
             throws BaseException {
 
         try {
@@ -86,8 +87,9 @@ public class PromptController {
             throws BaseException {
 
         try {
-            List<ChatGptMessageRequest> previousPromptList =
-                    promptService.generateAssistantRequestForContinueAsk(sessionId);
+            List<ChatGptMessageRequest> previousPromptList = promptService.generateAssistantRequestForContinueAsk(
+                    sessionId,
+                    memberService.getLoginMember(principal));
 
             Flux<String> responseFlux = chatGptService.ask(
                     previousPromptList,

@@ -46,11 +46,20 @@ public class BaseResponse<T> {
         this.responseTime = LocalDateTime.now();
     }
 
-    // 요청에 실패한 경우
+    // result가 없는 경우
     public BaseResponse(BaseResponseStatus status) {
         this.isSuccess = status.isSuccess();
         this.message = status.getMessage();
         this.code = status.getCode();
+        this.responseTime = LocalDateTime.now();
+    }
+
+    // 요청에 실패한 경우
+    public BaseResponse(BaseResponseStatus status, T result) {
+        this.isSuccess = status.isSuccess();
+        this.message = status.getMessage();
+        this.code = status.getCode();
+        this.result = result;
         this.responseTime = LocalDateTime.now();
     }
 

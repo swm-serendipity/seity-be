@@ -12,7 +12,6 @@ import com.serendipity.seity.prompt.dto.QuestionResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -40,14 +39,9 @@ public class ChatGptService {
     @Value("${openai.key}")
     private String openAiKey;
 
-    private final String AUTHORIZATION_HEADER = "Authorization";
-    private final String BEARER_PREFIX = "Bearer ";
-
-
-    private final PromptService promptService;
     private WebClient client;
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
+    private final ObjectMapper gptObjectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 
@@ -56,21 +50,23 @@ public class ChatGptService {
         client = WebClient.builder()
                 .baseUrl(openAiUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + openAiKey)
+                .defaultHeader(ChatGptConfig.AUTHORIZATION, ChatGptConfig.BEARER + openAiKey)
                 .build();
     }
 
     /**
      * 질문 메서드입니다.
-     * @param id 해당 document의 id
+     * @param messages 이전 질문
      * @param question 질문
      * @return 답변에 대한 flux 객체
      * @throws JsonProcessingException json 파싱에서 예외가 발생한 경우
      */
-    public Flux<String> ask(String id, String question) throws JsonProcessingException {
+    public Flux<String> ask(List<ChatGptMessageRequest> messages, String sessionId, String question)
+            throws JsonProcessingException {
 
-        List<ChatGptMessageRequest> messages = promptService.generateAssistantPromptById(id);
-        messages.add(new ChatGptMessageRequest("user", question));
+        if (question != null) {
+            messages.add(new ChatGptMessageRequest(ChatGptConfig.USER_ROLE, question));
+        }
 
         ChatGptRequest chatGptRequest = new ChatGptRequest(
                 ChatGptConfig.CHAT_MODEL,
@@ -80,7 +76,7 @@ public class ChatGptService {
                 messages
         );
 
-        String requestValue = objectMapper.writeValueAsString(chatGptRequest);
+        String requestValue = gptObjectMapper.writeValueAsString(chatGptRequest);
 
         return client.post()
                 .bodyValue(requestValue)
@@ -88,57 +84,37 @@ public class ChatGptService {
                 .exchangeToFlux(response -> response.bodyToFlux(String.class)
                         .mapNotNull(originalResponse -> {
 
-                            ObjectMapper objectMapper2 = new ObjectMapper();
+                            ObjectMapper responseObjectMapper = new ObjectMapper();
                             // 정상 응답
                             try {
-                                if (originalResponse.equals("[DONE]")) {
-                                    return objectMapper2.writeValueAsString(originalResponse);
+                                if (originalResponse.equals(ChatGptConfig.DONE_MESSAGE)) {
+                                    return responseObjectMapper.writeValueAsString(originalResponse);
                                 }
-                                JsonNode jsonNode = objectMapper2.readTree(originalResponse);
+
+                                JsonNode jsonNode = responseObjectMapper.readTree(originalResponse);
                                 String content = "";
+                                String finishReason = ChatGptConfig.PROCEEDING_RESPONSE;
                                 try {
-                                    JsonNode contentNode = jsonNode.path("choices").get(0).path("delta").path("content");
+                                    JsonNode contentNode = jsonNode.path("choices")
+                                            .get(0).path("delta").path("content");
+                                    JsonNode reasonNode = jsonNode.path("choices")
+                                            .get(0).path("finish_reason");
                                     content = contentNode.isMissingNode() ? "" : contentNode.asText();
+
+                                    if (!reasonNode.isNull()) {
+                                        finishReason = reasonNode.asText();
+                                    }
                                 } catch (NullPointerException ignored) { }
 
-                                return objectMapper2.writeValueAsString(new QuestionResponse(id, content));
+                                return responseObjectMapper.writeValueAsString(new QuestionResponse(sessionId,
+                                        content, finishReason));
                             } catch (JsonProcessingException e) {
                                 // content 필드가 없는 경우 -> 응답이 끝난 경우
+                                log.error("ask 에서 오류 발생: {}", originalResponse);
                                 e.printStackTrace();
                                 return null;
                             }
                         })
                         .filter(Objects::nonNull));
-    }
-
-    /**
-     * 생성된 답변을 1개의 문자열로 반환하는 메서드입니다.
-     * @param answerFlux 답변 flux 객체
-     * @throws JsonProcessingException JSON 파싱에서 예외가 발생한 경우
-     */
-    public StringBuilder getAnswerStringFromFlux(Flux<String> answerFlux) throws JsonProcessingException {
-
-        List<String> answers = answerFlux.collectList().block(); // Flux<String>을 List<String>으로 수집
-
-        StringBuilder combinedAnswer = new StringBuilder();
-        assert answers != null;
-
-        for (String answer : answers) {
-            combinedAnswer.append(extractValue(answer, "answer"));
-        }
-
-        return combinedAnswer;
-    }
-
-    private static String extractValue(String jsonString, String key) {
-        try {
-            JSONObject jsonObject = new JSONObject(jsonString);
-            if (jsonObject.has(key)) {
-                return jsonObject.getString(key);
-            }
-        } catch (Exception e) {
-            return "";
-        }
-        return "";
     }
 }

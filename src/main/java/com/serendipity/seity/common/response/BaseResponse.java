@@ -24,7 +24,7 @@ import static com.serendipity.seity.common.response.BaseResponseStatus.SUCCESS;
 @JsonPropertyOrder({"responseTime", "isSuccess", "code", "message", "result"})
 public class BaseResponse<T> {
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "Asia/Seoul")
     private LocalDateTime responseTime;
 
     @JsonProperty("isSuccess")

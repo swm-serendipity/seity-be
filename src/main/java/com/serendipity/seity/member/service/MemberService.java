@@ -12,7 +12,6 @@ import com.serendipity.seity.member.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.security.Principal;
-import java.util.Optional;
 
 import static com.serendipity.seity.common.response.BaseResponseStatus.INVALID_REFRESH_TOKEN;
 import static com.serendipity.seity.common.response.BaseResponseStatus.NO_LOGIN_USER;

@@ -6,24 +6,21 @@ import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
 /**
- * 프롬프트 질의를 위한 dto 클래스입니다.
+ * 프롬프트 질의에 사용되는 request 객체입니다.
  *
  * @author Min Ho CHO
  */
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class QuestionRequest {
+public class PromptAskRequest {
 
     private String sessionId;
     private String question;
 
-    public boolean init() {
-
+    public void init() {
         if (sessionId == null) {
             sessionId = new ObjectId().toString();
-            return true;
         }
-        return false;
     }
 }

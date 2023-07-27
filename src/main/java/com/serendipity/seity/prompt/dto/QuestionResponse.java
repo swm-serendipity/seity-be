@@ -16,4 +16,5 @@ public class QuestionResponse {
 
     private String sessionId;
     private String answer;
+    private String finishReason;
 }

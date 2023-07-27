@@ -43,6 +43,7 @@ public enum BaseResponseStatus {
 
     INVALID_PROMPT_ID_EXCEPTION(false, 2050, BAD_REQUEST, "유효하지 않은 프롬프트 세션 id입니다."),
     INVALID_USER_ACCESS_EXCEPTION(false, 2051, FORBIDDEN, "권한이 없는 유저의 접근입니다."),
+    INVALID_POST_ID_EXCEPTION(false, 2052, BAD_REQUEST, "유효하지 않은 게시글 id입니다."),
 
     /**
      * 5000 : Database, Server 오류

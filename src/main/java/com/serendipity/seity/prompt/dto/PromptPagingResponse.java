@@ -22,9 +22,9 @@ public class PromptPagingResponse {
     private String id;
     private String llm;
     private String firstQuestion;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "Asia/Seoul")
     private LocalDateTime createdAt;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "Asia/Seoul")
     private LocalDateTime lastModifiedAt;
     private boolean isFavorite;
 

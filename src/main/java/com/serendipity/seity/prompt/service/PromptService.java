@@ -186,10 +186,16 @@ public class PromptService {
      * @return 생성된 assistant request
      * @throws BaseException 프롬프트 세션 id가 유효하지 않은 경우
      */
-    public List<ChatGptMessageRequest> generateAssistantRequestForContinueAsk(String id) throws BaseException {
+    public List<ChatGptMessageRequest> generateAssistantRequestForContinueAsk(String id, Member member)
+            throws BaseException {
 
         Prompt findPrompt =
                 promptRepository.findById(id).orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
+
+        if (!findPrompt.getUserId().equals(member.getId())) {
+
+            throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
+        }
 
         List<ChatGptMessageRequest> result = new ArrayList<>();
 

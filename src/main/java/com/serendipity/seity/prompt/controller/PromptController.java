@@ -87,8 +87,9 @@ public class PromptController {
             throws BaseException {
 
         try {
-            List<ChatGptMessageRequest> previousPromptList =
-                    promptService.generateAssistantRequestForContinueAsk(sessionId);
+            List<ChatGptMessageRequest> previousPromptList = promptService.generateAssistantRequestForContinueAsk(
+                    sessionId,
+                    memberService.getLoginMember(principal));
 
             Flux<String> responseFlux = chatGptService.ask(
                     previousPromptList,

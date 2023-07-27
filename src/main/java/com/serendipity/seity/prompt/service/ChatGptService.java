@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.config.ChatGptConfig;
 import com.serendipity.seity.prompt.dto.ChatGptRequest;
 import com.serendipity.seity.prompt.dto.ChatGptMessageRequest;
@@ -17,10 +18,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.serendipity.seity.common.response.BaseResponseStatus.CHAT_GPT_EXCEPTION;
 
 
 /**
@@ -81,40 +85,51 @@ public class ChatGptService {
         return client.post()
                 .bodyValue(requestValue)
                 .accept(MediaType.TEXT_EVENT_STREAM)
-                .exchangeToFlux(response -> response.bodyToFlux(String.class)
-                        .mapNotNull(originalResponse -> {
+                .exchangeToFlux(response -> {
+                    if (response.statusCode().is2xxSuccessful()) {
+                        return response.bodyToFlux(String.class)
+                                .mapNotNull(originalResponse -> {
+                                    ObjectMapper responseObjectMapper = new ObjectMapper();
+                                    // 정상 응답
+                                    try {
+                                        if (originalResponse.equals(ChatGptConfig.DONE_MESSAGE)) {
+                                            return responseObjectMapper.writeValueAsString(originalResponse);
+                                        }
 
-                            ObjectMapper responseObjectMapper = new ObjectMapper();
-                            // 정상 응답
-                            try {
-                                if (originalResponse.equals(ChatGptConfig.DONE_MESSAGE)) {
-                                    return responseObjectMapper.writeValueAsString(originalResponse);
-                                }
+                                        JsonNode jsonNode = responseObjectMapper.readTree(originalResponse);
+                                        String content = "";
+                                        String finishReason = ChatGptConfig.PROCEEDING_RESPONSE;
+                                        try {
+                                            JsonNode contentNode = jsonNode.path("choices")
+                                                    .get(0).path("delta").path("content");
+                                            JsonNode reasonNode = jsonNode.path("choices")
+                                                    .get(0).path("finish_reason");
+                                            content = contentNode.isMissingNode() ? "" : contentNode.asText();
 
-                                JsonNode jsonNode = responseObjectMapper.readTree(originalResponse);
-                                String content = "";
-                                String finishReason = ChatGptConfig.PROCEEDING_RESPONSE;
-                                try {
-                                    JsonNode contentNode = jsonNode.path("choices")
-                                            .get(0).path("delta").path("content");
-                                    JsonNode reasonNode = jsonNode.path("choices")
-                                            .get(0).path("finish_reason");
-                                    content = contentNode.isMissingNode() ? "" : contentNode.asText();
+                                            if (!reasonNode.isNull()) {
+                                                finishReason = reasonNode.asText();
+                                            }
+                                        } catch (NullPointerException ignored) { }
 
-                                    if (!reasonNode.isNull()) {
-                                        finishReason = reasonNode.asText();
+                                        return responseObjectMapper.writeValueAsString(new QuestionResponse(sessionId,
+                                                content, finishReason));
+                                    } catch (JsonProcessingException e) {
+                                        // content 필드가 없는 경우 -> 응답이 끝난 경우
+                                        log.error("ask 에서 오류 발생: {}", originalResponse);
+                                        return null;
                                     }
-                                } catch (NullPointerException ignored) { }
-
-                                return responseObjectMapper.writeValueAsString(new QuestionResponse(sessionId,
-                                        content, finishReason));
-                            } catch (JsonProcessingException e) {
-                                // content 필드가 없는 경우 -> 응답이 끝난 경우
-                                log.error("ask 에서 오류 발생: {}", originalResponse);
-                                e.printStackTrace();
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull));
+                                })
+                                .filter(Objects::nonNull);
+                    } else {
+                        // Handle non-2xx responses here
+                        log.error("gpt 에러 발생: {}", response);
+                        return Flux.error(new BaseException(CHAT_GPT_EXCEPTION));
+                    }
+                })
+                .onErrorResume(WebClientResponseException.class, ex -> {
+                    // Handle WebClientResponseException separately if needed
+                    log.error("WebClientResponseException 에러 발생", ex);
+                    return Flux.error(new BaseException(CHAT_GPT_EXCEPTION));
+                });
     }
 }

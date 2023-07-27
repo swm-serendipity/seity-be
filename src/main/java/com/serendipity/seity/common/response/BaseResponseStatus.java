@@ -53,7 +53,10 @@ public enum BaseResponseStatus {
      * 5000 : Database, Server 오류
      */
     // exception handler
-    UNKNOWN_SERVER_EXCEPTION(false,5000, BAD_REQUEST, "알 수 없는 서버 오류가 발생했습니다.");
+    UNKNOWN_SERVER_EXCEPTION(false,5000, INTERNAL_SERVER_ERROR, "알 수 없는 서버 오류가 발생했습니다."),
+
+    // prompt
+    CHAT_GPT_EXCEPTION(false, 5010, INTERNAL_SERVER_ERROR, "ChatGPT API에서 오류가 발생했습니다.");
 
     private final boolean isSuccess;
     private final int code;

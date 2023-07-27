@@ -2,11 +2,11 @@ package com.serendipity.seity.member.controller;
 
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
-import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.member.dto.LoginRequest;
 import com.serendipity.seity.member.dto.SignUpRequest;
 import com.serendipity.seity.member.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -32,13 +32,13 @@ public class MemberController {
      * @return 회원가입 결과
      */
     @PostMapping("/signup")
-    public BaseResponse<?> signUp(@RequestBody SignUpRequest request) throws BaseException {
+    public BaseResponse<?> signUp(@Valid @RequestBody SignUpRequest request) throws BaseException {
 
         return new BaseResponse<>(memberService.signUp(request));
     }
 
     @PostMapping("/login")
-    public BaseResponse<?> login(@RequestBody LoginRequest request) {
+    public BaseResponse<?> login(@Valid @RequestBody LoginRequest request) throws BaseException {
 
         return new BaseResponse<>(memberService.login(request));
     }

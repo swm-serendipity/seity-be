@@ -15,14 +15,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.security.Principal;
 
-import static com.serendipity.seity.common.response.BaseResponseStatus.INVALID_REFRESH_TOKEN;
-import static com.serendipity.seity.common.response.BaseResponseStatus.NO_LOGIN_USER;
+import static com.serendipity.seity.common.response.BaseResponseStatus.*;
 import static com.serendipity.seity.member.Member.createMember;
 
 /**
@@ -46,7 +46,8 @@ public class MemberService {
      * @param request 로그인 정보
      * @return 토큰 생성 정보
      */
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) throws BaseException {
+
         // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
         // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -54,7 +55,13 @@ public class MemberService {
 
         // 2. 실제 검증 (사용자 비밀번호 체크)이 이루어지는 부분
         // authenticate 매서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드가 실행
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        Authentication authentication;
+        try {
+            authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        } catch (AuthenticationException e) {
+
+            throw new BaseException(INVALID_LOGIN_ID_OR_PASSWORD);
+        }
 
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
         TokenDto tokenDto = jwtTokenProvider.generateToken(authentication);
@@ -75,6 +82,16 @@ public class MemberService {
      * @return 회원가입 response 객체
      */
     public SignUpResponse signUp(SignUpRequest request) throws BaseException {
+
+        if (memberRepository.findByLoginId(request.getLoginId()).isPresent()) {
+
+            throw new BaseException(ALREADY_LOGIN_ID_EXIST);
+        }
+
+        if (memberRepository.findByEmail(request.getEmail()).isPresent()) {
+
+            throw new BaseException(ALREADY_EMAIL_EXIST);
+        }
 
         return new SignUpResponse(memberRepository.save(createMember(passwordEncoder.encode(request.getPassword()),
                 request.getName(), request.getLoginId(), request.getEmail(), request.getBirthDate(),

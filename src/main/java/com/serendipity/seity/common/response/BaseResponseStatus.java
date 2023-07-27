@@ -36,6 +36,13 @@ public enum BaseResponseStatus {
 
     VALIDATION_EXCEPTION(false,2032, BAD_REQUEST, "Validation 오류가 발생했습니다."),
 
+    // sign up
+    ALREADY_LOGIN_ID_EXIST(false, 4010, BAD_REQUEST, "이미 존재하는 로그인 ID입니다."),
+    ALREADY_EMAIL_EXIST(false, 4011, BAD_REQUEST, "이미 존재하는 이메일입니다."),
+
+    // login
+    INVALID_LOGIN_ID_OR_PASSWORD(false, 4020, BAD_REQUEST, "아이디 또는 비밀번호가 올바르지 않습니다."),
+
     INVALID_MEMBER_PART_EXCEPTION(false, 2033, BAD_REQUEST, "part 값이 존재하지 않거나 올바르지 않습니다."),
     INVALID_MEMBER_ROLE_EXCEPTION(false, 2034, BAD_REQUEST, "role 값이 존재하지 않거나 올바르지 않습니다."),
 

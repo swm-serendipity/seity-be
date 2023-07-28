@@ -47,3 +47,7 @@ jwt:
 openai:
   url: https://api.openai.com/v1/chat/completions
   key: ${OPENAI_KEY}
+
+google:
+  dlp:
+    key: ${GOOGLE_DLP_KEY}

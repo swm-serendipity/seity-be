@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -14,4 +15,6 @@ import java.util.List;
 public class InspectConfig {
 
     private List<InfoType> infoTypes;
+    private String minLikelihood;
+    private List<SingleCustomInfoType> customInfoTypes = new ArrayList<>();
 }

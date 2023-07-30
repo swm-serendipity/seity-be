@@ -1,5 +1,6 @@
 package com.serendipity.seity.dlp.service;
 
+import com.serendipity.seity.dlp.CustomInfoType;
 import com.serendipity.seity.dlp.InfoType;
 import com.serendipity.seity.dlp.dto.DeIdentificationResult;
 import com.serendipity.seity.dlp.dto.DlpResponse;
@@ -45,13 +46,19 @@ public class DlpService {
         // Set deidentifyConfig transformations with constant values
         List<Transformation> transformations = new ArrayList<>();
         Transformation transformation = new Transformation();
-        transformation.setInfoTypes(InfoType.getAllValues());
+
+        List<com.serendipity.seity.dlp.dto.api.request.InfoType> infoTypes = InfoType.getAllValues();
+        infoTypes.addAll(CustomInfoType.getAllValuesToInfoType());
+
+        transformation.setInfoTypes(infoTypes);
         transformation.setPrimitiveTransformation(new PrimitiveTransformation());
         transformation.getPrimitiveTransformation().setCharacterMaskConfig(new CharacterMaskConfig('#',
                 false, Collections.singletonList(new CharactersToIgnore(""))));
         transformations.add(transformation);
         STATIC_REQUEST.getDeidentifyConfig().setInfoTypeTransformations(new InfoTypeTransformations(transformations));
         STATIC_REQUEST.getInspectConfig().setInfoTypes(InfoType.getAllValues());
+        STATIC_REQUEST.getInspectConfig().setMinLikelihood("LIKELY");   // 비식별화 레벨
+        STATIC_REQUEST.getInspectConfig().setCustomInfoTypes(CustomInfoType.getAllValues());    // 커스텀 infotype
     }
 
     public DlpService(@Value("${google.dlp.key}") String key, WebClient.Builder webClientBuilder) {
@@ -73,7 +80,6 @@ public class DlpService {
                 .bodyToMono(ApiResponse.class);
 
         ApiResponse response = apiResponseMono.block();
-        log.info(response.getItem().getValue());
 
         return extractConvertedPart(question, response.getItem().getValue());
     }

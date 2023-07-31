@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,8 @@ public class PromptService {
 
     private final PromptRepository promptRepository;
     private final PostRepository postRepository;
+    /*private final EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
+    private final Encoding enc = registry.getEncoding(EncodingType.CL100K_BASE);*/
 
     /**
      * 프롬프트 질의 1개를 저장하는 메서드입니다.
@@ -171,11 +174,22 @@ public class PromptService {
         Prompt findPrompt =
                 promptRepository.findById(id).orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
 
+        int currentTokenSize = 1000;
         List<ChatGptMessageRequest> result = new ArrayList<>();
-        for (Qna qna : findPrompt.getQnaList()) {
-            result.add(new ChatGptMessageRequest(ChatGptConfig.USER_ROLE, qna.getQuestion()));
-            result.add(new ChatGptMessageRequest(ChatGptConfig.ASSISTANT_ROLE, qna.getAnswer()));
+
+        for (int i = findPrompt.getQnaList().size() - 1; i >= 0; i--) {
+
+            if (findPrompt.getQnaList().get(i).getTokenNumber() + currentTokenSize > ChatGptConfig.MAX_TOKEN_SIZE) {
+                break;
+            }
+            result.add(new ChatGptMessageRequest(ChatGptConfig.USER_ROLE,
+                    findPrompt.getQnaList().get(i).getQuestion()));
+            result.add(new ChatGptMessageRequest(ChatGptConfig.ASSISTANT_ROLE,
+                    findPrompt.getQnaList().get(i).getAnswer()));
+            currentTokenSize += findPrompt.getQnaList().get(i).getTokenNumber();
         }
+
+        Collections.reverse(result);
 
         return result;
     }

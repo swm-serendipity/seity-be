@@ -19,4 +19,5 @@ public class ChatGptConfig {
     public static final String DONE_MESSAGE = "[DONE]";
     public static final String PROCEEDING_RESPONSE = "proceeding";
     public static final String CONTINUE_GENERATING_QUESTION = "계속해서 답변해줘";
+    public static final int MAX_TOKEN_SIZE = 4000;
 }

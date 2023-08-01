@@ -25,7 +25,7 @@ public enum CustomInfoType {
     LOT_NUMBER_ADDRESS("LOT_NUMBER_ADDRESS",
             "(([가-힣A-Za-z·\\d~\\-\\.]+(읍|동)\\s)[\\d-]+)|(([가-힣A-Za-z·\\d~\\-\\.]+(읍|동)\\s)[\\d][^시]+)"),
     KOREA_PHONE_NUMBER("KOREA_PHONE_NUMBER", "(\\d{2,3}[ ,-]-?\\d{2,4}[ ,-]-?\\d{4})"),
-    ACCOUNT_NUMBER("ACCOUNT_NUMBER", "([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-])"),
+    //ACCOUNT_NUMBER("ACCOUNT_NUMBER", "([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-])"),
     INSURANCE_NUMBER("INSURANCE_NUMBER", "[1257][-~.[:space:]][0-9]{10}"),
     CAR_NUMBER_1("CAR_NUMBER_1", "^[가-힣]{2}\\\\d{2}[가-힣]{1}\\\\d{4}$"),
     CAR_NUMBER_2("CAR_NUMBER_2", "^\\\\d{2}[가-힣]{1}\\\\d{4}$"),

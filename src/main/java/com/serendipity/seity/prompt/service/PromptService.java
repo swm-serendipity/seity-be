@@ -41,8 +41,6 @@ public class PromptService {
 
     private final PromptRepository promptRepository;
     private final PostRepository postRepository;
-    /*private final EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
-    private final Encoding enc = registry.getEncoding(EncodingType.CL100K_BASE);*/
 
     /**
      * 프롬프트 질의 1개를 저장하는 메서드입니다.
@@ -51,7 +49,7 @@ public class PromptService {
      * @param answer 답변
      * @param member 현재 로그인한 사용자
      */
-    public void savePrompt(String id, String question, String answer, Member member) throws BaseException {
+    public void savePrompt(String id, String question, String answer, Member member) {
 
         Optional<Prompt> findPrompt = promptRepository.findById(id);
 
@@ -62,6 +60,23 @@ public class PromptService {
         }
 
         findPrompt.get().addQna(new Qna(question, answer));
+        promptRepository.save(findPrompt.get());
+    }
+
+    /**
+     * continue generating 을 한 이후 답변을 저장하는 메서드입니다.
+     * @param id 프롬프프트 id
+     * @param answer 추가 답변
+     */
+    public void addExtraAnswer(String id, String answer) {
+
+        Optional<Prompt> findPrompt = promptRepository.findById(id);
+
+        if (findPrompt.isEmpty()) {
+            return;
+        }
+
+        findPrompt.get().addExtraAnswer(answer);
         promptRepository.save(findPrompt.get());
     }
 

@@ -30,4 +30,9 @@ public class Qna {
         this.answer = answer;
         this.tokenNumber = enc.encode(question).size() + enc.encode(answer).size();
     }
+
+    public void addAnswer(String answer) {
+
+        this.answer += answer;
+    }
 }

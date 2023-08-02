@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/signup").permitAll()
                         .requestMatchers("/auth/reissue").permitAll()
+                        .requestMatchers("/member/part").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilter(corsConfig.corsFilter()) // CorsFilter 등록

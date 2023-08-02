@@ -12,13 +12,15 @@ import lombok.Getter;
 @Getter
 public enum MemberPart {
 
-    FRONT_END("FRONT_END"),
-    BACK_END("BACK_END"),
-    AI("AI");
+    FRONT_END("Front-end", "FRONT_END"),
+    BACK_END("Back-end", "BACK_END"),
+    AI("AI", "AI");
 
+    private final String name;
     private final String value;
 
-    MemberPart(String value) {
+    MemberPart(String name, String value) {
+        this.name = name;
         this.value = value;
     }
 

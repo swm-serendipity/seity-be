@@ -3,6 +3,7 @@ package com.serendipity.seity.member.controller;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
 import com.serendipity.seity.member.dto.LoginRequest;
+import com.serendipity.seity.member.dto.MemberPartResponse;
 import com.serendipity.seity.member.dto.MemberResponse;
 import com.serendipity.seity.member.dto.SignUpRequest;
 import com.serendipity.seity.member.service.MemberService;
@@ -73,5 +74,15 @@ public class MemberController {
     public BaseResponse<?> getLoginMemberInfo(Principal principal) throws BaseException {
 
         return new BaseResponse<>(MemberResponse.of(memberService.getLoginMember(principal)));
+    }
+
+    /**
+     * 모든 직무를 반환하는 메서드입니다.
+     * @return 모든 직무 리스트
+     */
+    @GetMapping("/member/part")
+    public BaseResponse<?> getAllMemberParts() {
+
+        return new BaseResponse<>(MemberPartResponse.getAllMemberParts());
     }
 }

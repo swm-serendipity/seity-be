@@ -55,6 +55,11 @@ public class Prompt {
         qnaList.add(qna);
     }
 
+    public void addExtraAnswer(String answer) {
+
+        qnaList.get(qnaList.size() - 1).addAnswer(answer);
+    }
+
     public void setFavorite(boolean favorite) {
         this.isFavorite = favorite;
     }

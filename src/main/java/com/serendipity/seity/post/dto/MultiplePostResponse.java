@@ -9,23 +9,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * 1개의 Post 조회에 사용되는 dto 클래스입니다.
+ * Post 여러개를 조회할 떄 사용되는 response 클래스입니다.
  *
  * @author Min Ho CHO
  */
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostResponse {
+public class MultiplePostResponse {
 
     private String id;
     private int views;
     private String llm;
-    private List<Qna> qnaList;
+    private Qna firstQna;
     private boolean isLike;
     private int likeNumber;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
@@ -33,13 +31,9 @@ public class PostResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime lastModifiedAt;
 
-    public static PostResponse of(Post post, Prompt prompt, boolean isLike) {
+    public static MultiplePostResponse of(Post post, Prompt prompt, boolean isLike) {
 
-        List<Qna> qnas = new ArrayList<>();
-        for (int i = 0; i <= post.getIndex(); i++) {
-            qnas.add(prompt.getQnaList().get(i));
-        }
-        return new PostResponse(post.getId(), post.getViews(), prompt.getLlm(), qnas, isLike, post.getLikes().size(),
-                post.getCreateTime(), post.getLastModifiedTime());
+        return new MultiplePostResponse(post.getId(), post.getViews(), prompt.getLlm(), prompt.getQnaList().get(0),
+                isLike, post.getLikes().size(), post.getCreateTime(), post.getLastModifiedTime());
     }
 }

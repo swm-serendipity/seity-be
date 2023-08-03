@@ -82,6 +82,9 @@ dependencies {
 	// json
 	implementation 'org.json:json:20230227'
 
+	// ChatGPT token counter
+	implementation 'com.knuddels:jtokkit:0.6.1'
+
 	testImplementation 'io.projectreactor:reactor-test'
 }
 

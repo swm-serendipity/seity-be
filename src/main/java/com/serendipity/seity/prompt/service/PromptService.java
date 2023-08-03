@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +49,7 @@ public class PromptService {
      * @param answer 답변
      * @param member 현재 로그인한 사용자
      */
-    public void savePrompt(String id, String question, String answer, Member member) throws BaseException {
+    public void savePrompt(String id, String question, String answer, Member member) {
 
         Optional<Prompt> findPrompt = promptRepository.findById(id);
 
@@ -59,6 +60,23 @@ public class PromptService {
         }
 
         findPrompt.get().addQna(new Qna(question, answer));
+        promptRepository.save(findPrompt.get());
+    }
+
+    /**
+     * continue generating 을 한 이후 답변을 저장하는 메서드입니다.
+     * @param id 프롬프프트 id
+     * @param answer 추가 답변
+     */
+    public void addExtraAnswer(String id, String answer) {
+
+        Optional<Prompt> findPrompt = promptRepository.findById(id);
+
+        if (findPrompt.isEmpty()) {
+            return;
+        }
+
+        findPrompt.get().addExtraAnswer(answer);
         promptRepository.save(findPrompt.get());
     }
 
@@ -171,11 +189,22 @@ public class PromptService {
         Prompt findPrompt =
                 promptRepository.findById(id).orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
 
+        int currentTokenSize = 1000;
         List<ChatGptMessageRequest> result = new ArrayList<>();
-        for (Qna qna : findPrompt.getQnaList()) {
-            result.add(new ChatGptMessageRequest(ChatGptConfig.USER_ROLE, qna.getQuestion()));
-            result.add(new ChatGptMessageRequest(ChatGptConfig.ASSISTANT_ROLE, qna.getAnswer()));
+
+        for (int i = findPrompt.getQnaList().size() - 1; i >= 0; i--) {
+
+            if (findPrompt.getQnaList().get(i).getTokenNumber() + currentTokenSize > ChatGptConfig.MAX_TOKEN_SIZE) {
+                break;
+            }
+            result.add(new ChatGptMessageRequest(ChatGptConfig.USER_ROLE,
+                    findPrompt.getQnaList().get(i).getQuestion()));
+            result.add(new ChatGptMessageRequest(ChatGptConfig.ASSISTANT_ROLE,
+                    findPrompt.getQnaList().get(i).getAnswer()));
+            currentTokenSize += findPrompt.getQnaList().get(i).getTokenNumber();
         }
+
+        Collections.reverse(result);
 
         return result;
     }

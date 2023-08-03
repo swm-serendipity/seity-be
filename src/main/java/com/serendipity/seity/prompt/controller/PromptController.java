@@ -1,8 +1,6 @@
 package com.serendipity.seity.prompt.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
 import com.serendipity.seity.config.ChatGptConfig;
@@ -17,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -60,9 +57,9 @@ public class PromptController {
             Flux<String> responseFlux = chatGptService.ask(
                     previousPromptList,
                     request.getSessionId(),
-                    request.getQuestion());
-
-            subscribeToSaveAnswer(responseFlux, request.getQuestion(), principal);
+                    request.getQuestion(),
+                    memberService.getLoginMember(principal)
+            );
 
             return ResponseEntity.ok()
                     .header(ChatGptConfig.NGINX_NO_BUFFERING_HEADER,
@@ -94,9 +91,9 @@ public class PromptController {
             Flux<String> responseFlux = chatGptService.ask(
                     previousPromptList,
                     sessionId,
-                    null);
-
-            subscribeToSaveAnswer(responseFlux, ChatGptConfig.CONTINUE_GENERATING_QUESTION, principal);
+                    null,
+                    memberService.getLoginMember(principal)
+            );
 
             return ResponseEntity.ok()
                     .header(ChatGptConfig.NGINX_NO_BUFFERING_HEADER,
@@ -177,59 +174,5 @@ public class PromptController {
     public BaseResponse<?> getSinglePrompt(@RequestParam String sessionId, Principal principal) throws BaseException {
 
         return new BaseResponse<>(promptService.getPromptById(sessionId, memberService.getLoginMember(principal)));
-    }
-
-    /**
-     * 완성된 flux로부터 답변을 추출하는 메서드입니다.
-     * @param jsonString json 문자열
-     * @return 완성된 답변
-     */
-    private String extractAnswer(String jsonString, String targetString) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(jsonString);
-
-            if (jsonNode.has(targetString)) {
-                return jsonNode.get(targetString).asText();
-            }
-
-            return "";
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return "";
-    }
-
-    /**
-     * 완성된 답변을 저장하기 위해 subscribe를 수행하는 메서드입니다.
-     * @param flux flux 객체
-     * @param question 질문
-     * @param principal 인증 정보
-     */
-    private void subscribeToSaveAnswer(Flux<String> flux, String question, Principal principal) {
-        flux
-                .collectList().publishOn(Schedulers.boundedElastic()) // Collect all the strings from the Flux into a List<String>
-                .map(strings -> {
-                    StringBuilder answer = new StringBuilder();
-                    String sessionId = null;
-                    for (String str: strings) {
-                        answer.append(extractAnswer(str, "answer"));
-
-                        if (sessionId == null && !extractAnswer(str, "sessionId").isBlank()) {
-                            sessionId = extractAnswer(str, "sessionId");
-                        }
-                    }
-
-                    try {
-                        promptService.savePrompt(sessionId, question, answer.toString(),
-                                memberService.getLoginMember(principal));
-                    } catch (BaseException e) {
-                        e.printStackTrace();
-                        return "";
-                    }
-                    return strings;
-                })
-                .subscribe(); // Subscribe to trigger the processing of the Flux
     }
 }

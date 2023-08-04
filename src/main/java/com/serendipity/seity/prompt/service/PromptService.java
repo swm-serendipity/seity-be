@@ -1,5 +1,9 @@
 package com.serendipity.seity.prompt.service;
 
+import com.knuddels.jtokkit.Encodings;
+import com.knuddels.jtokkit.api.Encoding;
+import com.knuddels.jtokkit.api.EncodingRegistry;
+import com.knuddels.jtokkit.api.ModelType;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.config.ChatGptConfig;
@@ -44,10 +48,11 @@ public class PromptService {
 
     /**
      * 프롬프트 질의 1개를 저장하는 메서드입니다.
-     * @param id 프롬프트 id
+     *
+     * @param id       프롬프트 id
      * @param question 질문
-     * @param answer 답변
-     * @param member 현재 로그인한 사용자
+     * @param answer   답변
+     * @param member   현재 로그인한 사용자
      */
     public void savePrompt(String id, String question, String answer, Member member) {
 
@@ -65,7 +70,8 @@ public class PromptService {
 
     /**
      * continue generating 을 한 이후 답변을 저장하는 메서드입니다.
-     * @param id 프롬프프트 id
+     *
+     * @param id     프롬프프트 id
      * @param answer 추가 답변
      */
     public void addExtraAnswer(String id, String answer) {
@@ -82,9 +88,10 @@ public class PromptService {
 
     /**
      * 최신 순으로 N개의 프롬프트 세션을 반환하는 메서드입니다.
-     * @param userId 사용자 id
+     *
+     * @param userId     사용자 id
      * @param pageNumber page number
-     * @param pageSize page size
+     * @param pageSize   page size
      * @return 조회된 프롬프트 리스트
      * TODO: 기존 for문 제거하고 람다식으로 진행
      * TODO: 포매팅을 제거 -> 원본 데이터를 넘겨버리고 클라이언트가 선택
@@ -95,7 +102,7 @@ public class PromptService {
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "lastModifiedTime"));
 
         List<PromptPagingResponse> result = new ArrayList<>();
-        for (Prompt prompt: promptRepository.findByUserIdAndIsExistOrderByLastModifiedTimeDesc(userId, true, pageable)) {
+        for (Prompt prompt : promptRepository.findByUserIdAndIsExistOrderByLastModifiedTimeDesc(userId, true, pageable)) {
             result.add(PromptPagingResponse.of(prompt));
         }
 
@@ -104,9 +111,10 @@ public class PromptService {
 
     /**
      * 1개의 프롬프트 세션에 대해 즐겨찾기를 설정 또는 해제하는 메서드입니다.
-     * @param id 프롬프트 세션 id
+     *
+     * @param id       프롬프트 세션 id
      * @param favorite 즐겨찾기 설정/해제 여부
-     * @param member 로그인한 사용자
+     * @param member   로그인한 사용자
      * @throws BaseException 로그인한 사용자와 삭제하려는 프롬프트의 사용자 id가 다를 경우
      */
     public void setFavoritePrompt(String id, boolean favorite, Member member) throws BaseException {
@@ -124,7 +132,8 @@ public class PromptService {
 
     /**
      * 프롬프트 세션 1개를 삭제하는 메서드입니다.
-     * @param id 프롬프트 세션 id
+     *
+     * @param id     프롬프트 세션 id
      * @param member 로그인한 사용자
      * @throws BaseException 로그인한 사용자와 삭제하려는 프롬프트의 사용자 id가 다를 경우
      */
@@ -153,7 +162,8 @@ public class PromptService {
 
     /**
      * 프롬프트 세션 1개를 조회하는 메서드입니다.
-     * @param id 프롬프트 세션 id
+     *
+     * @param id     프롬프트 세션 id
      * @param member 현재 로그인한 사용자
      * @return 해당 프롬프트 세션의 정보
      * @throws BaseException 유효하지 않은 세션 id이거나, 프롬프트 작성자와 로그인한 사용자가 다른 경우
@@ -176,6 +186,7 @@ public class PromptService {
 
     /**
      * assistant request를 생성하는 메서드입니다.
+     *
      * @param id 프롬프트 세션 id
      * @return 생성된 assistant request
      * @throws BaseException 프롬프트 세션 id가 유효하지 않은 경우
@@ -192,16 +203,22 @@ public class PromptService {
         int currentTokenSize = 1000;
         List<ChatGptMessageRequest> result = new ArrayList<>();
 
+        EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
+        Encoding enc = registry.getEncodingForModel(ModelType.GPT_3_5_TURBO);
+
         for (int i = findPrompt.getQnaList().size() - 1; i >= 0; i--) {
 
-            if (findPrompt.getQnaList().get(i).getTokenNumber() + currentTokenSize > ChatGptConfig.MAX_TOKEN_SIZE) {
+            int tokenSize = enc.encode(findPrompt.getQnaList().get(i).getQuestion()).size() +
+                    enc.encode(findPrompt.getQnaList().get(i).getAnswer()).size();
+
+            if (tokenSize + currentTokenSize > ChatGptConfig.MAX_TOKEN_SIZE) {
                 break;
             }
             result.add(new ChatGptMessageRequest(ChatGptConfig.USER_ROLE,
                     findPrompt.getQnaList().get(i).getQuestion()));
             result.add(new ChatGptMessageRequest(ChatGptConfig.ASSISTANT_ROLE,
                     findPrompt.getQnaList().get(i).getAnswer()));
-            currentTokenSize += findPrompt.getQnaList().get(i).getTokenNumber();
+            currentTokenSize += tokenSize;
         }
 
         Collections.reverse(result);
@@ -211,6 +228,7 @@ public class PromptService {
 
     /**
      * continue generating을 할 때 assistant request를 생성하는 메서드입니다.
+     *
      * @param id 프롬프트 세션 id
      * @return 생성된 assistant request
      * @throws BaseException 프롬프트 세션 id가 유효하지 않은 경우

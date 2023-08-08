@@ -5,10 +5,12 @@ import com.serendipity.seity.member.Member;
 import com.serendipity.seity.post.Like;
 import com.serendipity.seity.post.Post;
 import com.serendipity.seity.post.dto.CreatePostResponse;
+import com.serendipity.seity.post.dto.ImportPostResponse;
 import com.serendipity.seity.post.dto.MultiplePostResponse;
 import com.serendipity.seity.post.dto.PostResponse;
 import com.serendipity.seity.post.repository.PostRepository;
 import com.serendipity.seity.prompt.Prompt;
+import com.serendipity.seity.prompt.Qna;
 import com.serendipity.seity.prompt.repository.PromptRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -182,6 +184,33 @@ public class PostService {
         }
 
         postRepository.deleteById(postId);
+    }
+
+    /**
+     * 1개의 게시글에 대해 자신의 프롬프트 히스토리에 추가하는 메서드입니다.
+     * @param postId 게시글 id
+     * @param member 현재 로그인한 사용자
+     * @return 추가된 세션의 id
+     */
+    public ImportPostResponse importPost(String postId, Member member) throws BaseException {
+
+
+        Post findPost = postRepository.findById(postId).orElseThrow(
+                () -> new BaseException(INVALID_POST_ID_EXCEPTION));
+
+        Prompt findPrompt = promptRepository.findById(findPost.getPromptId()).orElseThrow(
+                () -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
+
+        List<Qna> qnas = new ArrayList<>();
+
+        for (int i = 0; i <= findPost.getIndex(); i++) {
+
+            qnas.add(new Qna(findPrompt.getQnaList().get(i).getQuestion(),
+                    findPrompt.getQnaList().get(i).getAnswer()));
+        }
+
+        return new ImportPostResponse(promptRepository.save(Prompt.importPrompt(member.getId(),
+                findPrompt.getLlm(), qnas)).getId());
     }
 
     /**

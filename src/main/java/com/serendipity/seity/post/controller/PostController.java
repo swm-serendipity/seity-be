@@ -138,4 +138,17 @@ public class PostController {
         postService.unlike(postId, memberService.getLoginMember(principal));
         return new BaseResponse<>(SUCCESS);
     }
+
+    /**
+     * 세션 import 메서드입니다.
+     * @param postId 게시글 id
+     * @param principal 인증 정보
+     * @return 생성된 프롬프트의 id
+     * @throws BaseException 로그인한 사용자가 없거나, 자신의 게시글을 import하려고 시도하는 경우
+     */
+    @PostMapping("/import")
+    public BaseResponse<?> importPost(@RequestParam String postId, Principal principal) throws BaseException {
+
+        return new BaseResponse<>(postService.importPost(postId, memberService.getLoginMember(principal)));
+    }
 }

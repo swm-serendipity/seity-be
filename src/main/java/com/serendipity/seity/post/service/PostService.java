@@ -2,12 +2,10 @@ package com.serendipity.seity.post.service;
 
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.member.Member;
+import com.serendipity.seity.member.repository.MemberRepository;
 import com.serendipity.seity.post.Like;
 import com.serendipity.seity.post.Post;
-import com.serendipity.seity.post.dto.CreatePostResponse;
-import com.serendipity.seity.post.dto.ImportPostResponse;
-import com.serendipity.seity.post.dto.MultiplePostResponse;
-import com.serendipity.seity.post.dto.PostResponse;
+import com.serendipity.seity.post.dto.*;
 import com.serendipity.seity.post.repository.PostRepository;
 import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
@@ -20,10 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.serendipity.seity.common.response.BaseResponseStatus.*;
 
@@ -40,15 +39,19 @@ public class PostService {
 
     private final PromptRepository promptRepository;
     private final PostRepository postRepository;
+    private final MemberRepository memberRepository;
 
     /**
      * 새로운 게시글을 생성하는 메서드입니다.
      * @param promptId 공유하려는 프롬프트 id
+     * @param title 게시글 제목
+     * @param mentionMemberList 멘션하려는 사용자 리스트
      * @param member 현재 로그인한 사용자
      * @return 생성된 게시글의 id
      * @throws BaseException 유효하지 않은 prompt id이거나, 프롬프트의 작성자와 로그인한 사용자가 일치하지 않는 경우
      */
-    public CreatePostResponse createPost(String promptId, Member member) throws BaseException {
+    public CreatePostResponse createPost(String promptId, String title, List<MentionMemberRequest> mentionMemberList,
+                                         Member member) throws BaseException {
 
         Prompt findPrompt = promptRepository.findById(promptId)
                 .orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
@@ -57,8 +60,16 @@ public class PostService {
             throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
         }
 
-        return new CreatePostResponse(postRepository.save(Post.createPost(promptId,
-                findPrompt.getQnaList().size() - 1)).getId());
+        return new CreatePostResponse(postRepository.save(
+                        Post.createPost(
+                                promptId,
+                                findPrompt.getQnaList().size() - 1,
+                                member.getPart().getValue(),
+                                title,
+                                mentionMemberList.stream()
+                                        .map(MentionMemberRequest::getMemberId)
+                                        .collect(Collectors.toList())))
+                .getId());
     }
 
     /**
@@ -95,6 +106,20 @@ public class PostService {
     }
 
     /**
+     * 우리 부서내 7일 이내의 프롬프트 중 좋아요가 많은 순서대로 n개를 조회하는 메서드입니다.
+     * @param n 몇개를 조회할지
+     * @param member 현재 로그인한 사용자
+     * @return 조회 결과
+     */
+    public List<MultiplePostResponse> getMyPartPopularRecentPosts(int n, Member member) throws BaseException {
+
+        Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC,
+                "createTime").and(Sort.by(Sort.Direction.DESC, "likeNumber")));
+        return pagingPosts(postRepository.findByPartOrderByLikeNumberDesc(member.getPart().getValue(),
+                LocalDateTime.now().minusDays(7), pageable), member);
+    }
+
+    /**
      * 전체 기간 중 좋아요가 많은 순서대로 n개를 조회하는 메서드입니다.
      * @param n 몇개를 조회할지
      * @param member 현재 로그인한 사용자
@@ -103,7 +128,8 @@ public class PostService {
      */
     public List<MultiplePostResponse> getPopularPosts(int n, Member member) throws BaseException {
 
-        return pagingPosts(postRepository.findTopNByOrderByLikesDesc(n), member);
+        Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
+        return pagingPosts(postRepository.findByOrderByLikesDesc(pageable), member);
     }
 
     /**
@@ -125,7 +151,8 @@ public class PostService {
             postRepository.save(findPost);
         }
 
-        return PostResponse.of(findPost, findPrompt, isLike(findPost, member));
+        return PostResponse.of(findPost, findPrompt, memberRepository.findById(findPrompt.getUserId()).orElseThrow(
+                () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)), isLike(findPost, member));
     }
 
     /**
@@ -242,10 +269,20 @@ public class PostService {
 
         List<MultiplePostResponse> result = new ArrayList<>();
         for (Post post : posts) {
-            result.add(MultiplePostResponse.of(post,
-                    promptRepository.findById(post.getPromptId())
-                            .orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION)),
-                    isLike(post, member)));
+            Prompt findPrompt = promptRepository.findById(post.getPromptId())
+                    .orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION));
+
+            Optional<Member> findMember = memberRepository.findById(findPrompt.getUserId());
+            if (findMember.isEmpty()) {
+                continue;
+            }
+
+            result.add(MultiplePostResponse.of(
+                    post,
+                    findPrompt,
+                    findMember.get(),
+                    isLike(post, member)))
+            ;
         }
 
         return result;

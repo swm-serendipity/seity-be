@@ -3,6 +3,7 @@ package com.serendipity.seity.post.controller;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
 import com.serendipity.seity.member.service.MemberService;
+import com.serendipity.seity.post.dto.CreatePostRequest;
 import com.serendipity.seity.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,15 +29,17 @@ public class PostController {
 
     /**
      * 게시글 생성 메서드입니다.
-     * @param sessionId 공유할 프롬프트 id
+     * TODO: 멘션한 사용자에게 알림
+     * @param request 공유할 프롬프트 정보
      * @param principal 인증 정보
      * @return 생성된 게시글 id
      * @throws BaseException 로그인한 사용자가 없거나, 타인의 프롬프트를 공유하려고 시도한 경우
      */
     @PostMapping
-    public BaseResponse<?> createPost(@RequestParam String sessionId, Principal principal) throws BaseException {
+    public BaseResponse<?> createPost(@RequestBody CreatePostRequest request, Principal principal) throws BaseException {
 
-        return new BaseResponse<>(postService.createPost(sessionId, memberService.getLoginMember(principal)));
+        return new BaseResponse<>(postService.createPost(request.getId(), request.getTitle(),
+                request.getMentionMemberList(), memberService.getLoginMember(principal)));
     }
 
     /**
@@ -95,6 +98,21 @@ public class PostController {
     public BaseResponse<?> getPopularPosts(@RequestParam int size, Principal principal) throws BaseException {
 
         return new BaseResponse<>(postService.getPopularPosts(size, memberService.getLoginMember(principal)));
+    }
+
+    /**
+     * 로그인한 사용자의 부서 내에서 작성한 게시글 중 size만큼의 최신 인기글을 가져오는 메서드입니다.
+     * @param size 가져올 게시글의 개수
+     * @param principal 인증 정보
+     * @return 게시글 리스트
+     * @throws BaseException 로그인한 사용자가 없을 경우
+     */
+    @GetMapping("/feed/top/part")
+    public BaseResponse<?> getMyPartRecentPopularPosts(@RequestParam int size, Principal principal)
+            throws BaseException {
+
+        return new BaseResponse<>(postService.getMyPartPopularRecentPosts(size,
+                memberService.getLoginMember(principal)));
     }
 
     /**

@@ -85,4 +85,14 @@ public class MemberController {
 
         return new BaseResponse<>(MemberPartResponse.getAllMemberParts());
     }
+
+    /**
+     * 멘션을 위해 모든 USER 권한을 가진 사용자를 반환하는 메서드입니다.
+     * @return 사용자 리스트
+     */
+    @GetMapping("/member/role/user")
+    public BaseResponse<?> getAllMemberForMention() {
+
+        return new BaseResponse<>(memberService.getAllMemberForMention());
+    }
 }

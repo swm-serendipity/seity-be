@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.serendipity.seity.common.response.BaseResponseStatus.*;
 import static com.serendipity.seity.member.Member.createMember;
@@ -143,6 +145,22 @@ public class MemberService {
 
         return memberRepository.findByLoginId(principal.getName())
                 .orElseThrow(() -> new BaseException(NO_LOGIN_USER));
+    }
+
+    /**
+     * 사용자 멘션을 위해 모든 "USER"의 권한을 가진 사용자를 조회하는 메서드입니다.
+     * @return 사용자 리스트
+     */
+    public List<MentionMemberResponse> getAllMemberForMention() {
+
+        List<Member> findMembers = memberRepository.findByRolesContaining("USER");
+        List<MentionMemberResponse> result = new ArrayList<>();
+
+        for (Member member : findMembers) {
+
+            result.add(MentionMemberResponse.of(member));
+        }
+        return result;
     }
 
     // Request Header 에서 토큰 정보 추출

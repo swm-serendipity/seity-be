@@ -141,7 +141,19 @@ public class ChatGptService {
                                 .filter(Objects::nonNull);
                     } else {
                         // Handle non-2xx responses here
-                        log.error("gpt 에러 발생: {}", response);
+                        log.error("=================gpt 에러 발생=================");
+
+                        for (ChatGptMessageRequest request : messages) {
+
+                            if (request.getRole().equals("user")) {
+                                log.error("question: {}", request.getContent());
+                            } else {
+                                log.error("answer: {}", request.getContent());
+                            }
+                        }
+
+                        log.error("=================gpt 에러 발생=================");
+
                         return Flux.error(new BaseException(CHAT_GPT_EXCEPTION));
                     }
                 })

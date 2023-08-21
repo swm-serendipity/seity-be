@@ -42,7 +42,7 @@ public class MultiplePostResponse {
         return new MultiplePostResponse(post.getId(), post.getTitle(),
                 member.getName(), member.getProfileBackgroundHex(),
                 member.getProfileTextHex(), member.getPart().getValue(), post.getViews(), prompt.getLlm(),
-                prompt.getQnaList().get(0), isLike, post.getLikes().size(), post.getCreateTime(),
+                prompt.getQnaList().get(0), isLike, post.getLikeNumber(), post.getCreateTime(),
                 post.getLastModifiedTime());
     }
 }

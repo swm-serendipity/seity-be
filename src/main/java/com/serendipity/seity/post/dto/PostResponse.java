@@ -47,6 +47,6 @@ public class PostResponse {
         }
         return new PostResponse(post.getId(), post.getTitle(), member.getName(), member.getProfileBackgroundHex(),
                 member.getProfileTextHex(), member.getPart().getValue(), post.getViews(), prompt.getLlm(),
-                qnas, isLike, post.getLikes().size(), post.getCreateTime(), post.getLastModifiedTime());
+                qnas, isLike, post.getLikeNumber(), post.getCreateTime(), post.getLastModifiedTime());
     }
 }

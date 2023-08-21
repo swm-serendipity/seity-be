@@ -98,8 +98,7 @@ public class PostService {
      */
     public List<MultiplePostResponse> getPopularRecentPosts(int n, Member member) throws BaseException {
 
-        Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC,
-                "createTime").and(Sort.by(Sort.Direction.DESC, "likeNumber")));
+        Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
         return pagingPosts(postRepository.findTopNByOrderByLikeNumberDesc(LocalDateTime.now().minusDays(7),
                 pageable), member);
 
@@ -113,8 +112,7 @@ public class PostService {
      */
     public List<MultiplePostResponse> getMyPartPopularRecentPosts(int n, Member member) throws BaseException {
 
-        Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC,
-                "createTime").and(Sort.by(Sort.Direction.DESC, "likeNumber")));
+        Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
         return pagingPosts(postRepository.findByPartOrderByLikeNumberDesc(member.getPart().getValue(),
                 LocalDateTime.now().minusDays(7), pageable), member);
     }

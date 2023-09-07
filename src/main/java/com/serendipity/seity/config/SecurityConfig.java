@@ -38,6 +38,10 @@ public class SecurityConfig {
                         .requestMatchers("/signup").permitAll()
                         .requestMatchers("/auth/reissue").permitAll()
                         .requestMatchers("/member/part").permitAll()
+                        .requestMatchers("/dlp/de-identification/name").permitAll()
+
+                        .requestMatchers("/detection").hasRole("ADMIN")
+                        .requestMatchers("/detection/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilter(corsConfig.corsFilter()) // CorsFilter 등록

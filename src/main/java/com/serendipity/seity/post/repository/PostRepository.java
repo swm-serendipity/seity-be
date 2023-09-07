@@ -24,4 +24,8 @@ public interface PostRepository extends MongoRepository<Post, String> {
     List<Post> findTopNByOrderByLikeNumberDesc(LocalDateTime time, Pageable pageable);
     @Query(value = "{ 'part': ?0, 'createTime' : { $gte: ?1 } }")
     List<Post> findByPartOrderByLikeNumberDesc(String part, LocalDateTime time, Pageable pageable);
+    @Query(value = "{ 'createTime' : { $gte: ?0 } }")
+    List<Post> findByCreateTimeGreaterThan(LocalDateTime time);
+    @Query(value = "{ 'part': ?0, 'createTime' : { $gte: ?1 } }")
+    List<Post> findByPartAnAndCreateTimeGreaterThan(String part, LocalDateTime time);
 }

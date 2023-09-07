@@ -73,20 +73,21 @@ public class PostService {
     }
 
     /**
-     * 가장 최근의 n개의 게시글을 조회하는 메서드입니다.
+     * 가장 최근의 n개의 게시글을 조회하는 메서드입니다.(페이징)
      * @param pageNumber page 인덱스
      * @param pageSize page 크기
      * @param member 현재 로그인한 사용자
      * @return 조회 결과
      * @throws BaseException 프롬프트 id가 유효하지 않을 경우
      */
-    public List<MultiplePostResponse> getRecentPosts(int pageNumber, int pageSize, Member member)
+    public PostPagingResponse getRecentPosts(int pageNumber, int pageSize, Member member)
             throws BaseException {
 
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
 
-        return pagingPosts(postRepository.findByOrderByCreateTimeDesc(pageable), member);
+        return pagingPosts(postRepository.findByOrderByCreateTimeDesc(pageable),
+                ((postRepository.findAll().size() - 1) / pageSize) + 1, member);
     }
 
     /**
@@ -100,7 +101,7 @@ public class PostService {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
         return pagingPosts(postRepository.findTopNByOrderByLikeNumberDesc(LocalDateTime.now().minusDays(7),
-                pageable), member);
+                pageable), 0, member).getPosts();
 
     }
 
@@ -114,7 +115,7 @@ public class PostService {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
         return pagingPosts(postRepository.findByPartOrderByLikeNumberDesc(member.getPart().getValue(),
-                LocalDateTime.now().minusDays(7), pageable), member);
+                LocalDateTime.now().minusDays(7), pageable), 0, member).getPosts();
     }
 
     /**
@@ -127,7 +128,7 @@ public class PostService {
     public List<MultiplePostResponse> getPopularPosts(int n, Member member) throws BaseException {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
-        return pagingPosts(postRepository.findByOrderByLikesDesc(pageable), member);
+        return pagingPosts(postRepository.findByOrderByLikesDesc(pageable), 0, member).getPosts();
     }
 
     /**
@@ -259,11 +260,12 @@ public class PostService {
     /**
      * Post 리스트로부터 반환할 response 클래스로 변환하는 메서드입니다.
      * @param posts 포스트 리스트
+     * @param totalPages 전체 페이지 수
      * @param member 현재 로그인한 사용자
      * @return 변환된 response
      * @throws BaseException 프롬프트 id가 유효하지 않은 경우
      */
-    private List<MultiplePostResponse> pagingPosts(List<Post> posts, Member member) throws BaseException {
+    private PostPagingResponse pagingPosts(List<Post> posts, int totalPages, Member member) throws BaseException {
 
         List<MultiplePostResponse> result = new ArrayList<>();
         for (Post post : posts) {
@@ -283,6 +285,6 @@ public class PostService {
             ;
         }
 
-        return result;
+        return new PostPagingResponse(totalPages, result);
     }
 }

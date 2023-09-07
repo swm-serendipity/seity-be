@@ -7,11 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.config.ChatGptConfig;
+import com.serendipity.seity.detection.service.PromptDetectionService;
 import com.serendipity.seity.member.Member;
-import com.serendipity.seity.prompt.dto.ChatGptRequest;
-import com.serendipity.seity.prompt.dto.ChatGptMessageRequest;
-import com.serendipity.seity.prompt.dto.QuestionResponse;
-import com.serendipity.seity.prompt.dto.AnswerDto;
+import com.serendipity.seity.prompt.Prompt;
+import com.serendipity.seity.prompt.dto.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +46,7 @@ public class ChatGptService {
 
     private WebClient client;
     private final PromptService promptService;
+    private final PromptDetectionService promptDetectionService;
 
     private final ObjectMapper gptObjectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -68,7 +68,8 @@ public class ChatGptService {
      * @return 답변에 대한 flux 객체
      * @throws JsonProcessingException json 파싱에서 예외가 발생한 경우
      */
-    public Flux<String> ask(List<ChatGptMessageRequest> messages, String sessionId, String question, Member member)
+    public Flux<String> ask(List<ChatGptMessageRequest> messages, List<DetectionRequest> detections,
+                            String sessionId, String question, Member member)
             throws JsonProcessingException {
 
         if (question != null) {
@@ -121,11 +122,30 @@ public class ChatGptService {
                                             if (question == null) {
 
                                                 // 추가 답변 저장
-                                                promptService.addExtraAnswer(sessionId, answer.getAnswer());
+                                                Prompt prompt = promptService.addExtraAnswer(sessionId, answer.getAnswer());
+
+                                                // 민감정보 탐지 내역 저장
+                                                if (detections != null && !detections.isEmpty()) {
+                                                    promptDetectionService.createPromptDetection(
+                                                            prompt,
+                                                            prompt.getQnaList().size() - 1,
+                                                            detections,
+                                                            member);
+                                                }
+
                                             } else {
 
                                                 // 답변이 끝난 경우 답변을 저장
-                                                promptService.savePrompt(sessionId, question, answer.getAnswer(), member);
+                                                Prompt prompt = promptService.savePrompt(sessionId, question, answer.getAnswer(), member);
+
+                                                // 민감정보 탐지 내역 저장
+                                                if (detections != null && !detections.isEmpty()) {
+                                                    promptDetectionService.createPromptDetection(
+                                                            prompt,
+                                                            prompt.getQnaList().size() - 1,
+                                                            detections,
+                                                            member);
+                                                }
                                             }
 
                                         }

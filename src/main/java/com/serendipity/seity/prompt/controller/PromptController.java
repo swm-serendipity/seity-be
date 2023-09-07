@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
 import com.serendipity.seity.config.ChatGptConfig;
+import com.serendipity.seity.detection.service.PromptDetectionService;
 import com.serendipity.seity.member.service.MemberService;
 import com.serendipity.seity.prompt.dto.*;
 import com.serendipity.seity.prompt.service.ChatGptService;
@@ -36,6 +37,7 @@ public class PromptController {
     private final PromptService promptService;
     private final MemberService memberService;
     private final ChatGptService chatGptService;
+    private final PromptDetectionService promptDetectionService;
 
     /**
      * 프롬프트 질의 메서드입니다.
@@ -56,6 +58,7 @@ public class PromptController {
 
             Flux<String> responseFlux = chatGptService.ask(
                     previousPromptList,
+                    request.getDetections(),
                     request.getSessionId(),
                     request.getQuestion(),
                     memberService.getLoginMember(principal)
@@ -90,6 +93,7 @@ public class PromptController {
 
             Flux<String> responseFlux = chatGptService.ask(
                     previousPromptList,
+                    null,
                     sessionId,
                     null,
                     memberService.getLoginMember(principal)

@@ -54,18 +54,17 @@ public class PromptService {
      * @param answer   답변
      * @param member   현재 로그인한 사용자
      */
-    public void savePrompt(String id, String question, String answer, Member member) {
+    public Prompt savePrompt(String id, String question, String answer, Member member) {
 
         Optional<Prompt> findPrompt = promptRepository.findById(id);
 
         if (findPrompt.isEmpty()) {
-            promptRepository.save(createPrompt(id, member.getId(), "ChatGPT",
+            return promptRepository.save(createPrompt(id, member.getId(), "ChatGPT",
                     new Qna(question, answer)));
-            return;
         }
 
         findPrompt.get().addQna(new Qna(question, answer));
-        promptRepository.save(findPrompt.get());
+        return promptRepository.save(findPrompt.get());
     }
 
     /**
@@ -74,16 +73,16 @@ public class PromptService {
      * @param id     프롬프프트 id
      * @param answer 추가 답변
      */
-    public void addExtraAnswer(String id, String answer) {
+    public Prompt addExtraAnswer(String id, String answer) {
 
         Optional<Prompt> findPrompt = promptRepository.findById(id);
 
         if (findPrompt.isEmpty()) {
-            return;
+            return null;
         }
 
         findPrompt.get().addExtraAnswer(answer);
-        promptRepository.save(findPrompt.get());
+        return promptRepository.save(findPrompt.get());
     }
 
     /**

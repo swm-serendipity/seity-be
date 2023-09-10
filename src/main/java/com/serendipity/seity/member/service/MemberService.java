@@ -12,6 +12,7 @@ import com.serendipity.seity.member.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -34,6 +35,7 @@ import static com.serendipity.seity.member.Member.createMember;
  */
 @Service
 @Transactional
+@Slf4j
 @RequiredArgsConstructor
 public class MemberService {
 
@@ -112,12 +114,14 @@ public class MemberService {
         String token = resolveToken(request);
 
         // 2. 토큰 유효성 검사
+        // TODO: 여기서 문제 발생
         if (token != null && jwtTokenProvider.validateToken(token)) {
 
             // 3. 저장된 refresh token 찾기
             RefreshToken refreshToken = refreshTokenRedisRepository.findByRefreshToken(token);
 
             if (refreshToken != null) {
+                log.error("refreshToken을 redis에서 찾을 수 없음");
 
                 // 4. token 재발급
                 TokenDto tokenDto = jwtTokenProvider.generateToken(refreshToken.getId(), refreshToken.getAuthorities());

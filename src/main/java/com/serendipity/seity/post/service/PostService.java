@@ -5,8 +5,10 @@ import com.serendipity.seity.member.Member;
 import com.serendipity.seity.member.repository.MemberRepository;
 import com.serendipity.seity.post.Like;
 import com.serendipity.seity.post.Post;
+import com.serendipity.seity.post.Scrap;
 import com.serendipity.seity.post.dto.*;
 import com.serendipity.seity.post.repository.PostRepository;
+import com.serendipity.seity.post.repository.ScrapRepository;
 import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
 import com.serendipity.seity.prompt.repository.PromptRepository;
@@ -40,6 +42,7 @@ public class PostService {
     private final PromptRepository promptRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final ScrapRepository scrapRepository;
 
     /**
      * 새로운 게시글을 생성하는 메서드입니다.
@@ -237,6 +240,87 @@ public class PostService {
 
         return new ImportPostResponse(promptRepository.save(Prompt.importPrompt(member.getId(),
                 findPrompt.getLlm(), qnas)).getId());
+    }
+
+    /**
+     * 특정 게시글을 스크랩하는 메서드입니다.
+     * @param postId 게시글 id
+     * @param member 현재 로그인한 사용자
+     */
+    public void addScrap(String postId, Member member) throws BaseException {
+
+        Optional<Scrap> findScrap = scrapRepository.findByUserId(member.getId());
+        Post findPost = postRepository.findById(postId).orElseThrow(() -> new BaseException(INVALID_POST_ID_EXCEPTION));
+
+        if (findScrap.isEmpty()) {
+
+            scrapRepository.save(Scrap.createScrap(
+                    member.getId(),
+                    postId,
+                    findPost.getCreateTime()
+            ));
+            return;
+        }
+
+        findScrap.get().add(postId, findPost.getCreateTime());
+        scrapRepository.save(findScrap.get());
+    }
+
+    /**
+     * 스크랩 1개를 삭제하는 메서드입니다.
+     * @param postId 게시글 id
+     * @param member 현재 로그인한 사용자
+     */
+    public void deleteScrap(String postId, Member member) {
+
+        Optional<Scrap> findScrap = scrapRepository.findByUserId(member.getId());
+
+        if (findScrap.isPresent()) {
+
+            findScrap.get().delete(postId);
+            scrapRepository.save(findScrap.get());
+        }
+    }
+
+    /**
+     * 스크랩한 게시글 목록을 조회하는 메서드입니다.
+     * @param pageNumber 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param member 현재 로그인한 사용자
+     * @return
+     */
+    public PostPagingResponse getScrapPosts(int pageNumber, int pageSize, Member member) throws BaseException {
+
+        Optional<Scrap> findScrap = scrapRepository.findByUserId(member.getId());
+
+        if (findScrap.isEmpty()) {
+
+            return pagingPosts(new ArrayList<>(), 0, member);
+        }
+
+        // 직접 페이징
+        List<Post> result = new ArrayList<>();
+        int totalPageNumber = ((findScrap.get().getScrapPostList().size() - 1) / pageSize) + 1;
+
+        for (int i = pageNumber * pageSize; i < pageNumber * pageSize + pageSize; i++) {
+
+            if (i >= findScrap.get().getScrapPostList().size()) {
+
+                break;
+            }
+
+            String currentPostId = findScrap.get().getScrapPostList().get(i).getPostId();
+            Optional<Post> findPost = postRepository.findById(currentPostId);
+
+            if (findPost.isEmpty()) {
+                findScrap.get().delete(currentPostId);
+                continue;
+            }
+
+            result.add(findPost.get());
+        }
+
+        return pagingPosts(result, totalPageNumber, member);
     }
 
     /**

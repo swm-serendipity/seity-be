@@ -169,4 +169,49 @@ public class PostController {
 
         return new BaseResponse<>(postService.importPost(postId, memberService.getLoginMember(principal)));
     }
+
+    /**
+     * 게시글 1개에 대해 스크랩하는 메서드입니다.
+     * @param postId 게시글 id
+     * @param principal 인증 정보
+     * @return 성공 여부
+     * @throws BaseException 로그인한 사용자가 없을 경우
+     */
+    @PostMapping("/scrap")
+    public BaseResponse<?> scrapPost(@RequestParam String postId, Principal principal) throws BaseException {
+
+        postService.addScrap(postId, memberService.getLoginMember(principal));
+        return new BaseResponse<>(SUCCESS);
+    }
+
+    /**
+     * 스크랩 1개를 삭제하는 메서드입니다.
+     * @param postId 게시글 id
+     * @param principal 인증 정보
+     * @return 성공 여부
+     * @throws BaseException 로그인한 사용자가 없을 경우
+     */
+    @DeleteMapping("/scrap")
+    public BaseResponse<?> deleteScrap(@RequestParam String postId, Principal principal) throws BaseException {
+
+        postService.deleteScrap(postId, memberService.getLoginMember(principal));
+        return new BaseResponse<>(SUCCESS);
+    }
+
+    /**
+     * 사용자의 스크랩 리스트를 조회하는 메서드입니다.
+     * @param pageNumber 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param principal 인증 정보
+     * @return 스크랩 리스트
+     * @throws BaseException 로그인한 사용자가 없을 경우
+     */
+    @GetMapping("/scrap")
+    public BaseResponse<?> getScrap(@RequestParam int pageNumber, @RequestParam int pageSize, Principal principal) throws BaseException {
+
+        return new BaseResponse<>(postService.getScrapPosts(
+                pageNumber,
+                pageSize,
+                memberService.getLoginMember(principal)));
+    }
 }

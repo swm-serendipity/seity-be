@@ -1,19 +1,53 @@
 spring:
-  # mysql
   datasource:
-    url: jdbc:mysql://${rds.hostname}:${rds.port}/${rds.db.name}
+    # mysql
+    url: jdbc:mysql://${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DB_NAME}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${rds.username}
-    password: ${rds.password}
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
 
   # jpa
   jpa:
     open-in-view: true
     hibernate:
       ddl-auto: none
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
   messages:
     basename: i18n/exception
     encoding: UTF-8
+
+  # 파일 업로드 크기 설정
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  # redis
+  data:
+    redis:
+      port: ${REDIS_PORT}
+      host: ${REDIS_HOSTNAME}
+      password: ${REDIS_PASSWORD}
+
+    # mongodb
+    mongodb:
+      host: ${MONGO_HOSTNAME}
+      port: ${MONGO_PORT}
+      database: ${MONGO_DB_NAME}
+      username: ${MONGO_USERNAME}
+      password: ${MONGO_PASSWORD}
+      authentication-database: admin
+
+logging.level:
+  org.hibernate.SQL: info
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+
+openai:
+  url: https://api.openai.com/v1/chat/completions
+  key: ${OPENAI_KEY}
+
+google:
+  dlp:
+    key: ${GOOGLE_DLP_KEY}

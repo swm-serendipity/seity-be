@@ -22,21 +22,70 @@ repositories {
 }
 
 dependencies {
+	// Spring boot
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// Web
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Spring Security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// Rabbit mq
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
-	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+	testImplementation 'org.springframework.amqp:spring-rabbit-test'
+
+	// JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// QueryDSL
+	implementation "com.querydsl:querydsl-jpa:5.0.0"
+	annotationProcessor "com.querydsl:querydsl-apt:5.0.0"
+
+	// ps6py
+	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.8.1'
+
+	// MySQL
+	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	// MongoDB
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+	// H2
+	runtimeOnly 'com.h2database:h2'
+
+	// Elastic Search
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// JWT
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// Lombok
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.h2database:h2'
-	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// Web Client
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// M1
+	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-aarch_64'
+
+	// json
+	implementation 'org.json:json:20230227'
+
+	// ChatGPT token counter
+	implementation 'com.knuddels:jtokkit:0.6.1'
+
 	testImplementation 'io.projectreactor:reactor-test'
-	testImplementation 'org.springframework.amqp:spring-rabbit-test'
 }
 
 tasks.named('test') {

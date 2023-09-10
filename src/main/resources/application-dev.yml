@@ -1,0 +1,48 @@
+spring:
+  datasource:
+    # H2 Database
+    url: jdbc:h2:tcp://localhost/~/seity;MODE=MYSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  messages:
+    basename: i18n/exception
+    encoding: UTF-8
+
+  # 파일 업로드 크기 설정
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  data:
+    # redis
+    redis:
+      port: 6379
+      host: localhost
+
+    # mongodb
+    mongodb:
+      host: localhost
+      port: 27017
+      database: seity
+
+logging.level:
+  org.hibernate.SQL: debug
+# org.hibernate.type: trace
+
+jwt:
+  secret: testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
+
+openai:
+  url: https://api.openai.com/v1/chat/completions

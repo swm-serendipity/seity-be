@@ -147,11 +147,12 @@ public class ChatGptService {
                                                             member);
                                                 }
                                             }
-
                                         }
 
-                                        return responseObjectMapper.writeValueAsString(new QuestionResponse(sessionId,
-                                                content, finishReason));
+                                        return responseObjectMapper.writeValueAsString(new QuestionResponse(
+                                                sessionId,
+                                                content,
+                                                finishReason));
                                     } catch (JsonProcessingException e) {
                                         // content 필드가 없는 경우 -> 응답이 끝난 경우
                                         log.error("ask 에서 오류 발생: {}", originalResponse);

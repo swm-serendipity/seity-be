@@ -49,6 +49,14 @@ public enum BaseResponseStatus {
     // post
     INVALID_POST_ID_EXCEPTION(false, 4050, BAD_REQUEST, "유효하지 않은 게시글 id입니다."),
 
+    // detection
+    INVALID_DETECTION_INFO_EXCEPTION(false, 5060, BAD_REQUEST, "유효하지 않은 민감정보 종류입니다."),
+    INVALID_DETECTION_ID_EXCEPTION(false, 5061, BAD_REQUEST, "유효하지 않은 민감정보 탐지 id입니다."),
+    INVALID_MEMBER_ID_EXCEPTION(false, 5062, BAD_REQUEST, "프롬프트의 user id가 유효하지 않습니다. " +
+            "(프롬프트 작성자가 회원 탈퇴를 했을 가능성 존재)"),
+    INVALID_USER_ID_EXCEPTION(false, 5063, BAD_REQUEST, "사용자의 id가 존재하지 않습니다."),
+    INVALID_PROMPT_DETECTION_ID_EXCEPTION(false, 5064, BAD_REQUEST, "민감정보 검출 내역 id가 유효하지 않습니다."),
+
     /**
      * 5000 : Database, Server 오류
      */

@@ -1,6 +1,7 @@
 package com.serendipity.seity.post.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.serendipity.seity.member.Member;
 import com.serendipity.seity.post.Post;
 import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
@@ -21,6 +22,11 @@ import java.time.LocalDateTime;
 public class MultiplePostResponse {
 
     private String id;
+    private String title;
+    private String memberName;
+    private String memberProfileBackgroundHex;
+    private String memberProfileTextHex;
+    private String memberPart;
     private int views;
     private String llm;
     private Qna firstQna;
@@ -31,9 +37,12 @@ public class MultiplePostResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime lastModifiedAt;
 
-    public static MultiplePostResponse of(Post post, Prompt prompt, boolean isLike) {
+    public static MultiplePostResponse of(Post post, Prompt prompt, Member member, boolean isLike) {
 
-        return new MultiplePostResponse(post.getId(), post.getViews(), prompt.getLlm(), prompt.getQnaList().get(0),
-                isLike, post.getLikes().size(), post.getCreateTime(), post.getLastModifiedTime());
+        return new MultiplePostResponse(post.getId(), post.getTitle(),
+                member.getName(), member.getProfileBackgroundHex(),
+                member.getProfileTextHex(), member.getPart().getValue(), post.getViews(), prompt.getLlm(),
+                prompt.getQnaList().get(0), isLike, post.getLikeNumber(), post.getCreateTime(),
+                post.getLastModifiedTime());
     }
 }

@@ -25,10 +25,13 @@ public class MemberResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "Asia/Seoul")
     private LocalDate birthDate;
     private String part;
+    private String profileBackgroundHex;
+    private String profileTextHex;
 
     public static MemberResponse of(Member member) {
 
         return new MemberResponse(member.getId(), member.getName(), member.getLoginId(), member.getEmail(),
-                member.getBirthDate(), member.getPart().getValue());
+                member.getBirthDate(), member.getPart().getValue(), member.getProfileBackgroundHex(),
+                member.getProfileTextHex());
     }
 }

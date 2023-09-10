@@ -32,4 +32,10 @@ public class DlpController {
         return new BaseResponse<>(dlpService.callDlpApi(request.getQuestion()));
     }
 
+    @PostMapping("/de-identification/name")
+    public BaseResponse<?> deIdentificationWithName(@RequestBody DlpRequest request) {
+
+        return new BaseResponse<>(dlpService.callDlpApiForName(request.getQuestion()));
+    }
+
 }

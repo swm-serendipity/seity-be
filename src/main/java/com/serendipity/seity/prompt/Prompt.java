@@ -43,11 +43,25 @@ public class Prompt {
         this.isExist = true;
     }
 
+    private Prompt(String userId, String llm, boolean isFavorite, List<Qna> qnaList) {
+        this.userId = userId;
+        this.llm = llm;
+        this.isFavorite = isFavorite;
+        this.qnaList = qnaList;
+        this.createTime = LocalDateTime.now();
+        this.isExist = true;
+    }
+
     public static Prompt createPrompt(String id, String userId, String llm, Qna qna) {
 
         List<Qna> qnas = new ArrayList<>();
         qnas.add(qna);
         return new Prompt(id, userId, llm, false, qnas);
+    }
+
+    public static Prompt importPrompt(String userId, String llm, List<Qna> qnas) {
+
+        return new Prompt(userId, llm, false, qnas);
     }
 
     public void addQna(Qna qna) {

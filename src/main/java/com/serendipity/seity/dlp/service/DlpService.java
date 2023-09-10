@@ -2,6 +2,7 @@ package com.serendipity.seity.dlp.service;
 
 import com.serendipity.seity.dlp.CustomInfoType;
 import com.serendipity.seity.dlp.InfoType;
+import com.serendipity.seity.dlp.NameInfoType;
 import com.serendipity.seity.dlp.dto.DeIdentificationResult;
 import com.serendipity.seity.dlp.dto.DlpResponse;
 import com.serendipity.seity.dlp.dto.api.CharactersToIgnore;
@@ -34,6 +35,7 @@ public class DlpService {
     private final WebClient webClient;
 
     private static final ExternalApiRequest STATIC_REQUEST;
+    private static final ExternalApiRequest STATIC_NAME_REQUEST;
 
     static {
         // Create the constant parts of the request body
@@ -61,6 +63,32 @@ public class DlpService {
         STATIC_REQUEST.getInspectConfig().setCustomInfoTypes(CustomInfoType.getAllValues());    // 커스텀 infotype
     }
 
+    static {
+        // Create the constant parts of the request body
+        STATIC_NAME_REQUEST = new ExternalApiRequest();
+
+        // Set deidentifyConfig and inspectConfig with constant values
+        STATIC_NAME_REQUEST.setDeidentifyConfig(new DeidentifyConfig());
+        STATIC_NAME_REQUEST.setInspectConfig(new InspectConfig());
+
+        // Set deidentifyConfig transformations with constant values
+        List<Transformation> transformations = new ArrayList<>();
+        Transformation transformation = new Transformation();
+
+        List<com.serendipity.seity.dlp.dto.api.request.InfoType> infoTypes = NameInfoType.getAllValues();
+        //infoTypes.addAll(CustomInfoType.getAllValuesToInfoType());
+
+        transformation.setInfoTypes(infoTypes);
+        transformation.setPrimitiveTransformation(new PrimitiveTransformation());
+        transformation.getPrimitiveTransformation().setCharacterMaskConfig(new CharacterMaskConfig('#',
+                false, Collections.singletonList(new CharactersToIgnore(""))));
+        transformations.add(transformation);
+        STATIC_NAME_REQUEST.getDeidentifyConfig().setInfoTypeTransformations(new InfoTypeTransformations(transformations));
+        STATIC_NAME_REQUEST.getInspectConfig().setInfoTypes(NameInfoType.getAllValues());
+        STATIC_NAME_REQUEST.getInspectConfig().setMinLikelihood("LIKELY");   // 비식별화 레벨
+        STATIC_REQUEST.getInspectConfig().setCustomInfoTypes(new ArrayList<>());    // 커스텀 infotype
+    }
+
     public DlpService(@Value("${google.dlp.key}") String key, WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl(EXTERNAL_API_URL + key).build();
     }
@@ -76,6 +104,25 @@ public class DlpService {
 
         Mono<ApiResponse> apiResponseMono = webClient.post()
                 .bodyValue(STATIC_REQUEST)
+                .retrieve()
+                .bodyToMono(ApiResponse.class);
+
+        ApiResponse response = apiResponseMono.block();
+
+        return extractConvertedPart(question, response.getItem().getValue());
+    }
+
+    /**
+     * DLP API를 호출하는 메서드입니다. (이름만 적용)
+     * @param question 질문
+     * @return 원본 질문, 변환된 질문, 변환된 부분
+     */
+    public DlpResponse callDlpApiForName(String question) {
+
+        STATIC_NAME_REQUEST.setItem(new Item(question));     // 질문 세팅
+
+        Mono<ApiResponse> apiResponseMono = webClient.post()
+                .bodyValue(STATIC_NAME_REQUEST)
                 .retrieve()
                 .bodyToMono(ApiResponse.class);
 

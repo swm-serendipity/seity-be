@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
+import java.util.List;
+
 /**
  * 프롬프트 질의에 사용되는 request 객체입니다.
  *
@@ -20,6 +22,8 @@ public class PromptAskRequest {
 
     @NotBlank(message = "질문을 입력해주세요.")
     private String question;
+
+    private List<DetectionRequest> detections;
 
     public void init() {
         if (sessionId == null) {

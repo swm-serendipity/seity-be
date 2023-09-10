@@ -52,6 +52,12 @@ public class Member extends BaseTimeEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private MemberStatus status;
 
+    @Column(nullable = false)
+    private String profileBackgroundHex;
+
+    @Column(nullable = false)
+    private String profileTextHex;
+
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
 
@@ -103,6 +109,10 @@ public class Member extends BaseTimeEntity implements UserDetails {
         this.part = part;
         this.status = status;
         this.roles.add(role.getCode());
+
+        MemberProfileColor color = MemberProfileColor.getRandomColor();
+        this.profileBackgroundHex = color.getBackgroundHex();
+        this.profileTextHex = color.getTextHex();
     }
 
     /**

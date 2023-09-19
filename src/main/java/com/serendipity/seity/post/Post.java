@@ -25,6 +25,7 @@ public class Post extends BaseTimeEntity {
     @Id
     private String id;
     private String promptId;
+    private String userId;
     private int index;  // 몇 번째 질문까지가 공유된 부분인지
     private String part;    // 어느 부서의 사용자가 작성한 게시글인지
     private String title;
@@ -33,8 +34,9 @@ public class Post extends BaseTimeEntity {
     private int likeNumber;
     private List<String> mentionMemberList;
 
-    private Post(String promptId, int index, String part, String title, int views, List<String> mentionMemberList) {
+    private Post(String promptId, String userId, int index, String part, String title, int views, List<String> mentionMemberList) {
         this.promptId = promptId;
+        this.userId = userId;
         this.index = index;
         this.part = part;
         this.title = title;
@@ -44,9 +46,9 @@ public class Post extends BaseTimeEntity {
         this.mentionMemberList = mentionMemberList;
     }
 
-    public static Post createPost(String promptId, int index, String part, String title, List<String> mentionMemberList) {
+    public static Post createPost(String promptId, String userId, int index, String part, String title, List<String> mentionMemberList) {
 
-        return new Post(promptId, index, part, title, 0, mentionMemberList);
+        return new Post(promptId, userId, index, part, title, 0, mentionMemberList);
     }
 
     public void increaseViews() {

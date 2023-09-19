@@ -28,4 +28,6 @@ public interface PostRepository extends MongoRepository<Post, String> {
     List<Post> findByCreateTimeGreaterThan(LocalDateTime time);
     @Query(value = "{ 'part': ?0, 'createTime' : { $gte: ?1 } }")
     List<Post> findByPartAnAndCreateTimeGreaterThan(String part, LocalDateTime time);
+    List<Post> findByUserId(String userId, Pageable pageable);
+    int countByUserId(String userId);
 }

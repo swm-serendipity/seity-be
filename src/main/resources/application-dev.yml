@@ -37,8 +37,9 @@ spring:
       port: 27017
       database: seity
 
-logging.level:
-  org.hibernate.SQL: debug
+logging:
+  level:
+    org.hibernate.SQL: debug
 # org.hibernate.type: trace
 
 jwt:

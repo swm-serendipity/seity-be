@@ -6,6 +6,7 @@ import com.serendipity.seity.member.repository.MemberRepository;
 import com.serendipity.seity.post.Like;
 import com.serendipity.seity.post.Post;
 import com.serendipity.seity.post.Scrap;
+import com.serendipity.seity.post.ScrapPost;
 import com.serendipity.seity.post.dto.*;
 import com.serendipity.seity.post.repository.PostRepository;
 import com.serendipity.seity.post.repository.ScrapRepository;
@@ -66,6 +67,7 @@ public class PostService {
         return new CreatePostResponse(postRepository.save(
                         Post.createPost(
                                 promptId,
+                                member.getId(),
                                 findPrompt.getQnaList().size() - 1,
                                 member.getPart().getValue(),
                                 title,
@@ -89,8 +91,10 @@ public class PostService {
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
 
-        return pagingPosts(postRepository.findByOrderByCreateTimeDesc(pageable),
-                ((postRepository.findAll().size() - 1) / pageSize) + 1, member);
+        int totalPostNumber = (int) postRepository.count();
+
+        return pagingPosts(postRepository.findByOrderByCreateTimeDesc(pageable), totalPostNumber,
+                ((totalPostNumber - 1) / pageSize) + 1, member);
     }
 
     /**
@@ -104,7 +108,7 @@ public class PostService {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
         return pagingPosts(postRepository.findTopNByOrderByLikeNumberDesc(LocalDateTime.now().minusDays(7),
-                pageable), 0, member).getPosts();
+                pageable), 0, 0, member).getPosts();
 
     }
 
@@ -118,7 +122,7 @@ public class PostService {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
         return pagingPosts(postRepository.findByPartOrderByLikeNumberDesc(member.getPart().getValue(),
-                LocalDateTime.now().minusDays(7), pageable), 0, member).getPosts();
+                LocalDateTime.now().minusDays(7), pageable), 0, 0, member).getPosts();
     }
 
     /**
@@ -131,7 +135,7 @@ public class PostService {
     public List<MultiplePostResponse> getPopularPosts(int n, Member member) throws BaseException {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
-        return pagingPosts(postRepository.findByOrderByLikesDesc(pageable), 0, member).getPosts();
+        return pagingPosts(postRepository.findByOrderByLikesDesc(pageable), 0, 0, member).getPosts();
     }
 
     /**
@@ -154,7 +158,8 @@ public class PostService {
         }
 
         return PostResponse.of(findPost, findPrompt, memberRepository.findById(findPrompt.getUserId()).orElseThrow(
-                () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)), isLike(findPost, member));
+                () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)), isLike(findPost, member),
+                isScrap(findPost, member), findPost.getUserId().equals(member.getId()));
     }
 
     /**
@@ -295,7 +300,7 @@ public class PostService {
 
         if (findScrap.isEmpty()) {
 
-            return pagingPosts(new ArrayList<>(), 0, member);
+            return pagingPosts(new ArrayList<>(), 0, 0, member);
         }
 
         // 직접 페이징
@@ -320,7 +325,25 @@ public class PostService {
             result.add(findPost.get());
         }
 
-        return pagingPosts(result, totalPageNumber, member);
+        return pagingPosts(result, findScrap.get().getScrapPostList().size(), totalPageNumber, member);
+    }
+
+    /**
+     * 현재 로그인한 사용자가 작성한 게시글을 페이징하여 반환하는 메서드입니다.
+     * @param pageNumber 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param member 현재 로그인한 사용자
+     * @return 페이징 결과
+     * @throws BaseException 정상적이지 않은 prompt를 포함한 post가 포함되어 있는 경우
+     */
+    public PostPagingResponse getMyPosts(int pageNumber, int pageSize, Member member) throws BaseException {
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
+        List<Post> findPosts = postRepository.findByUserId(member.getId(), pageable);
+
+        int totalPostNumber = postRepository.countByUserId(member.getId());
+
+        return pagingPosts(findPosts, totalPostNumber, (totalPostNumber - 1) / pageSize + 1, member);
     }
 
     /**
@@ -342,14 +365,38 @@ public class PostService {
     }
 
     /**
+     * 해당 게시글에 대해 스크랩을 했는지 여부를 반환하는 메서드입니다.
+     * @param post 게시글
+     * @param member 사용자
+     * @return 스크랩 여부
+     */
+    private boolean isScrap(Post post, Member member) {
+
+        Optional<Scrap> findScrap = scrapRepository.findByUserId(member.getId());
+
+        if (findScrap.isEmpty()) {
+            return false;
+        }
+
+        for (ScrapPost scrapPost : findScrap.get().getScrapPostList()) {
+            if (scrapPost.getPostId().equals(post.getId())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Post 리스트로부터 반환할 response 클래스로 변환하는 메서드입니다.
      * @param posts 포스트 리스트
+     * @param totalPostNumber 전체 게시글 수
      * @param totalPages 전체 페이지 수
      * @param member 현재 로그인한 사용자
      * @return 변환된 response
      * @throws BaseException 프롬프트 id가 유효하지 않은 경우
      */
-    private PostPagingResponse pagingPosts(List<Post> posts, int totalPages, Member member) throws BaseException {
+    private PostPagingResponse pagingPosts(List<Post> posts, int totalPostNumber, int totalPages, Member member) throws BaseException {
 
         List<MultiplePostResponse> result = new ArrayList<>();
         for (Post post : posts) {
@@ -365,10 +412,12 @@ public class PostService {
                     post,
                     findPrompt,
                     findMember.get(),
-                    isLike(post, member)))
+                    isLike(post, member),
+                    isScrap(post, member),
+                    post.getUserId().equals(member.getId())))
             ;
         }
 
-        return new PostPagingResponse(totalPages, result);
+        return new PostPagingResponse(totalPages, totalPostNumber, result);
     }
 }

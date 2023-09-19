@@ -15,6 +15,9 @@ import com.serendipity.seity.prompt.repository.PromptRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -76,10 +79,14 @@ public class PromptDetectionService {
      * @param member 현재 로그인한 사용자
      * @return 민감정보 탐지 내역
      */
-    public List<MultipleDetectionResponse> getDetectionList(Member member) {
+    public DetectionPagingResponse getDetectionList(Member member, int pageNumber, int pageSize) {
+
+        Pageable pageable =
+                PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
 
         List<PromptDetection> findDetectionList
-                = promptDetectionRepository.findPromptDetectionByIsDetectedAndPartOrderByCreateTimeDesc(true, member.getPart().getValue());
+                = promptDetectionRepository.findPromptDetectionByIsDetectedAndPartOrderByCreateTimeDesc(
+                        true, member.getPart().getValue(), pageable);
 
         List<MultipleDetectionResponse> result = new ArrayList<>();
 
@@ -91,7 +98,10 @@ public class PromptDetectionService {
                     detection));
         }
 
-        return result;
+        return pagingDetections(
+                findDetectionList,
+                promptDetectionRepository.findPromptDetectionByIsDetectedAndPartOrderByCreateTimeDesc(true, member.getPart().getValue()).size(),
+                pageSize);
     }
 
     /**
@@ -160,6 +170,21 @@ public class PromptDetectionService {
         }
 
         promptDetectionRepository.deleteById(id);
+    }
+
+    private DetectionPagingResponse pagingDetections(List<PromptDetection> detections, int totalDetectionNumber, int pageSize) {
+
+        List<MultipleDetectionResponse> result = new ArrayList<>();
+
+        for (PromptDetection detection : detections) {
+
+            result.add(MultipleDetectionResponse.of(
+                    promptRepository.findById(detection.getPromptId()),
+                    memberRepository.findById(detection.getUserId()),
+                    detection));
+        }
+
+        return new DetectionPagingResponse((totalDetectionNumber - 1) / pageSize + 1, totalDetectionNumber, result);
     }
 
 }

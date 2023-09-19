@@ -17,5 +17,6 @@ import java.util.List;
 public class PostPagingResponse {
 
     private int totalPages;
+    private int totalPostNumber;
     private List<MultiplePostResponse> posts;
 }

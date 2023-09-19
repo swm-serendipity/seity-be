@@ -6,6 +6,7 @@ import com.serendipity.seity.member.repository.MemberRepository;
 import com.serendipity.seity.post.Like;
 import com.serendipity.seity.post.Post;
 import com.serendipity.seity.post.Scrap;
+import com.serendipity.seity.post.ScrapPost;
 import com.serendipity.seity.post.dto.*;
 import com.serendipity.seity.post.repository.PostRepository;
 import com.serendipity.seity.post.repository.ScrapRepository;
@@ -66,6 +67,7 @@ public class PostService {
         return new CreatePostResponse(postRepository.save(
                         Post.createPost(
                                 promptId,
+                                member.getId(),
                                 findPrompt.getQnaList().size() - 1,
                                 member.getPart().getValue(),
                                 title,
@@ -89,8 +91,10 @@ public class PostService {
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
 
-        return pagingPosts(postRepository.findByOrderByCreateTimeDesc(pageable), postRepository.findAll().size(),
-                ((postRepository.findAll().size() - 1) / pageSize) + 1, member);
+        int totalPostNumber = (int) postRepository.count();
+
+        return pagingPosts(postRepository.findByOrderByCreateTimeDesc(pageable), totalPostNumber,
+                ((totalPostNumber - 1) / pageSize) + 1, member);
     }
 
     /**
@@ -154,7 +158,8 @@ public class PostService {
         }
 
         return PostResponse.of(findPost, findPrompt, memberRepository.findById(findPrompt.getUserId()).orElseThrow(
-                () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)), isLike(findPost, member));
+                () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)), isLike(findPost, member),
+                isScrap(findPost, member), findPost.getUserId().equals(member.getId()));
     }
 
     /**
@@ -324,6 +329,24 @@ public class PostService {
     }
 
     /**
+     * 현재 로그인한 사용자가 작성한 게시글을 페이징하여 반환하는 메서드입니다.
+     * @param pageNumber 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param member 현재 로그인한 사용자
+     * @return 페이징 결과
+     * @throws BaseException 정상적이지 않은 prompt를 포함한 post가 포함되어 있는 경우
+     */
+    public PostPagingResponse getMyPosts(int pageNumber, int pageSize, Member member) throws BaseException {
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
+        List<Post> findPosts = postRepository.findByUserId(member.getId(), pageable);
+
+        int totalPostNumber = postRepository.countByUserId(member.getId());
+
+        return pagingPosts(findPosts, totalPostNumber, (totalPostNumber - 1) / pageSize + 1, member);
+    }
+
+    /**
      * 해당 게시글에 대해 좋아요를 눌렀는지 여부를 반환하는 메서드입니다.
      * @param post 게시글
      * @param member 사용자
@@ -334,6 +357,29 @@ public class PostService {
         for (Like like : post.getLikes()) {
 
             if (like.getUserId().equals(member.getId())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 해당 게시글에 대해 스크랩을 했는지 여부를 반환하는 메서드입니다.
+     * @param post 게시글
+     * @param member 사용자
+     * @return 스크랩 여부
+     */
+    private boolean isScrap(Post post, Member member) {
+
+        Optional<Scrap> findScrap = scrapRepository.findByUserId(member.getId());
+
+        if (findScrap.isEmpty()) {
+            return false;
+        }
+
+        for (ScrapPost scrapPost : findScrap.get().getScrapPostList()) {
+            if (scrapPost.getPostId().equals(post.getId())) {
                 return true;
             }
         }
@@ -366,7 +412,9 @@ public class PostService {
                     post,
                     findPrompt,
                     findMember.get(),
-                    isLike(post, member)))
+                    isLike(post, member),
+                    isScrap(post, member),
+                    post.getUserId().equals(member.getId())))
             ;
         }
 

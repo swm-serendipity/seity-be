@@ -162,18 +162,23 @@ public class ChatGptService {
                                 .filter(Objects::nonNull);
                     } else {
                         // Handle non-2xx responses here
-                        log.error("=================gpt 에러 발생=================");
+                        ObjectMapper objectMapper = new ObjectMapper();
 
-                        for (ChatGptMessageRequest request : messages) {
+                        try {
+                            log.error("GPT error occurred");
+                            log.error("messages: {}", objectMapper.writeValueAsString(messages));
+                        } catch (JsonProcessingException e) {
+                            log.error("=================GPT error occurred when parsing json=================");
+                            for (ChatGptMessageRequest request : messages) {
 
-                            if (request.getRole().equals("user")) {
-                                log.error("question: {}", request.getContent());
-                            } else {
-                                log.error("answer: {}", request.getContent());
+                                if (request.getRole().equals("user")) {
+                                    log.error("question: {}", request.getContent());
+                                } else {
+                                    log.error("answer: {}", request.getContent());
+                                }
                             }
+                            log.error("=================GPT error occurred when parsing json=================");
                         }
-
-                        log.error("=================gpt 에러 발생=================");
 
                         return Flux.error(new BaseException(CHAT_GPT_EXCEPTION));
                     }

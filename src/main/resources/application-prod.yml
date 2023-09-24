@@ -51,3 +51,6 @@ openai:
 google:
   dlp:
     key: ${GOOGLE_DLP_KEY}
+
+sse:
+  timeout: ${SSE_TIMEOUT}

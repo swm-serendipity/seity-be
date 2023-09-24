@@ -47,3 +47,6 @@ jwt:
 
 openai:
   url: https://api.openai.com/v1/chat/completions
+
+sse:
+  timeout: 100000

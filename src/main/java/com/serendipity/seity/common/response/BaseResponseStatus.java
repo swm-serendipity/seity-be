@@ -50,12 +50,15 @@ public enum BaseResponseStatus {
     INVALID_POST_ID_EXCEPTION(false, 4050, BAD_REQUEST, "유효하지 않은 게시글 id입니다."),
 
     // detection
-    INVALID_DETECTION_INFO_EXCEPTION(false, 5060, BAD_REQUEST, "유효하지 않은 민감정보 종류입니다."),
-    INVALID_DETECTION_ID_EXCEPTION(false, 5061, BAD_REQUEST, "유효하지 않은 민감정보 탐지 id입니다."),
-    INVALID_MEMBER_ID_EXCEPTION(false, 5062, BAD_REQUEST, "프롬프트의 user id가 유효하지 않습니다. " +
+    INVALID_DETECTION_INFO_EXCEPTION(false, 4060, BAD_REQUEST, "유효하지 않은 민감정보 종류입니다."),
+    INVALID_DETECTION_ID_EXCEPTION(false, 4061, BAD_REQUEST, "유효하지 않은 민감정보 탐지 id입니다."),
+    INVALID_MEMBER_ID_EXCEPTION(false, 4062, BAD_REQUEST, "프롬프트의 user id가 유효하지 않습니다. " +
             "(프롬프트 작성자가 회원 탈퇴를 했을 가능성 존재)"),
-    INVALID_USER_ID_EXCEPTION(false, 5063, BAD_REQUEST, "사용자의 id가 존재하지 않습니다."),
-    INVALID_PROMPT_DETECTION_ID_EXCEPTION(false, 5064, BAD_REQUEST, "민감정보 검출 내역 id가 유효하지 않습니다."),
+    INVALID_USER_ID_EXCEPTION(false, 4063, BAD_REQUEST, "사용자의 id가 존재하지 않습니다."),
+    INVALID_PROMPT_DETECTION_ID_EXCEPTION(false, 4064, BAD_REQUEST, "민감정보 검출 내역 id가 유효하지 않습니다."),
+
+    // calling
+    INVALID_CALLING_ID_EXCEPTION(false, 4070, BAD_REQUEST, "소명 요청 id가 유효하지 않습니다."),
 
     /**
      * 5000 : Database, Server 오류
@@ -64,7 +67,10 @@ public enum BaseResponseStatus {
     UNKNOWN_SERVER_EXCEPTION(false,5000, INTERNAL_SERVER_ERROR, "알 수 없는 서버 오류가 발생했습니다."),
 
     // prompt
-    CHAT_GPT_EXCEPTION(false, 5010, INTERNAL_SERVER_ERROR, "ChatGPT API에서 오류가 발생했습니다.");
+    CHAT_GPT_EXCEPTION(false, 5010, INTERNAL_SERVER_ERROR, "ChatGPT API에서 오류가 발생했습니다."),
+
+    // calling
+    SSE_SEND_EXCEPTION(false, 5020, INTERNAL_SERVER_ERROR, "SSE 전송 과정 중 오류가 발생했습니다.");
 
     private final boolean isSuccess;
     private final int code;

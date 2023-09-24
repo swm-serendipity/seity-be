@@ -31,18 +31,20 @@ public class MultiplePostResponse {
     private String llm;
     private Qna firstQna;
     private boolean isLike;
+    private boolean isScrap;
+    private boolean isMyPost;
     private int likeNumber;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime lastModifiedAt;
 
-    public static MultiplePostResponse of(Post post, Prompt prompt, Member member, boolean isLike) {
+    public static MultiplePostResponse of(Post post, Prompt prompt, Member member, boolean isLike, boolean isScrap, boolean isMyPost) {
 
         return new MultiplePostResponse(post.getId(), post.getTitle(),
                 member.getName(), member.getProfileBackgroundHex(),
                 member.getProfileTextHex(), member.getPart().getValue(), post.getViews(), prompt.getLlm(),
-                prompt.getQnaList().get(0), isLike, post.getLikeNumber(), post.getCreateTime(),
+                prompt.getQnaList().get(0), isLike, isScrap, isMyPost, post.getLikeNumber(), post.getCreateTime(),
                 post.getLastModifiedTime());
     }
 }

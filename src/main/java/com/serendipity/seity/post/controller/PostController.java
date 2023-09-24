@@ -116,6 +116,21 @@ public class PostController {
     }
 
     /**
+     * 로그인한 사용자가 작성한 글을 페이징하여 가져오는 메서드입니다.
+     * @param pageNumber 페이지 번호 (0부터 시작)
+     * @param pageSize 페이지 크기
+     * @param principal 인증 정보
+     * @return 게시글 리스트
+     * @throws BaseException 로그인한 사용자가 없을 경우
+     */
+    @GetMapping("/myinfo/postList")
+    public BaseResponse<?> getMyPosts(@RequestParam int pageNumber, @RequestParam int pageSize, Principal principal)
+            throws BaseException {
+
+        return new BaseResponse<>(postService.getMyPosts(pageNumber, pageSize, memberService.getLoginMember(principal)));
+    }
+
+    /**
      * 1개의 게시글을 삭제하는 메서드입니다.
      * @param postId 게시글 id
      * @param principal 인증 정보

@@ -37,8 +37,9 @@ spring:
       port: 27017
       database: seity
 
-logging.level:
-  org.hibernate.SQL: debug
+logging:
+  level:
+    org.hibernate.SQL: debug
 # org.hibernate.type: trace
 
 jwt:
@@ -46,3 +47,6 @@ jwt:
 
 openai:
   url: https://api.openai.com/v1/chat/completions
+
+sse:
+  timeout: 100000

@@ -33,13 +33,15 @@ public class PostResponse {
     private String llm;
     private List<Qna> qnaList;
     private boolean isLike;
+    private boolean isScrap;
+    private boolean isMyPost;
     private int likeNumber;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime lastModifiedAt;
 
-    public static PostResponse of(Post post, Prompt prompt, Member member, boolean isLike) {
+    public static PostResponse of(Post post, Prompt prompt, Member member, boolean isLike, boolean isScrap, boolean isMyPost) {
 
         List<Qna> qnas = new ArrayList<>();
         for (int i = 0; i <= post.getIndex(); i++) {
@@ -47,6 +49,6 @@ public class PostResponse {
         }
         return new PostResponse(post.getId(), post.getTitle(), member.getName(), member.getProfileBackgroundHex(),
                 member.getProfileTextHex(), member.getPart().getValue(), post.getViews(), prompt.getLlm(),
-                qnas, isLike, post.getLikeNumber(), post.getCreateTime(), post.getLastModifiedTime());
+                qnas, isLike, isScrap, isMyPost, post.getLikeNumber(), post.getCreateTime(), post.getLastModifiedTime());
     }
 }

@@ -77,7 +77,11 @@ public class MemberService {
                 .refreshToken(tokenDto.getRefreshToken())
                 .build());
 
-        return new LoginResponse(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
+        return new LoginResponse(
+                tokenDto.getAccessToken(),
+                tokenDto.getRefreshToken(),
+                memberRepository.findByLoginId(request.getLoginId()).orElseThrow(
+                        () -> new BaseException(INVALID_LOGIN_ID_OR_PASSWORD)).getRoles());
     }
 
     /**
@@ -133,7 +137,11 @@ public class MemberService {
                                 .refreshToken(tokenDto.getRefreshToken())
                                 .build());
 
-                return new LoginResponse(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
+                return new LoginResponse(
+                        tokenDto.getAccessToken(),
+                        tokenDto.getRefreshToken(),
+                        memberRepository.findById(refreshToken.getId()).orElseThrow(
+                                () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)).getRoles());
             }
         }
 

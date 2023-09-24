@@ -31,13 +31,15 @@ public class PromptDetectionController {
     /**
      * 민감정보 탐지 내역 리스트를 조회하는 메서드입니다.
      * @param principal 인증 정보
+     * @param pageNumber 페이지 번호
+     * @param pageSize 페이지 크기
      * @return 민감정보 탐지 내역 리스트
      * @throws BaseException 로그인한 사용자가 없을 경우
      */
     @GetMapping
-    public BaseResponse<?> getDetectionList(Principal principal) throws BaseException {
+    public BaseResponse<?> getDetectionList(Principal principal, @RequestParam int pageNumber, @RequestParam int pageSize) throws BaseException {
 
-        return new BaseResponse<>(promptDetectionService.getDetectionList(memberService.getLoginMember(principal)));
+        return new BaseResponse<>(promptDetectionService.getDetectionList(memberService.getLoginMember(principal), pageNumber, pageSize));
     }
 
     /**

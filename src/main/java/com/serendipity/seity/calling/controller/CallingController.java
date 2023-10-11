@@ -1,11 +1,10 @@
 package com.serendipity.seity.calling.controller;
 
-import com.serendipity.seity.calling.dto.CallingRequest;
-import com.serendipity.seity.calling.dto.CallingSendRequest;
+import com.serendipity.seity.calling.dto.callingrequest.CallingRequestRequest;
+import com.serendipity.seity.calling.dto.calling.CallingSendRequest;
 import com.serendipity.seity.calling.service.CallingService;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
-import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.member.service.MemberService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +53,7 @@ public class CallingController {
      * @throws BaseException 현재 로그인한 사용자가 없을 경우
      */
     @PostMapping
-    public BaseResponse<?> sendCallingRequest(@RequestBody CallingRequest request, Principal principal) throws BaseException {
+    public BaseResponse<?> sendCallingRequest(@RequestBody CallingRequestRequest request, Principal principal) throws BaseException {
 
         callingService.createCalling(request.getPromptDetectionId(), memberService.getLoginMember(principal));
         return new BaseResponse<>(SUCCESS);

@@ -3,7 +3,7 @@ package com.serendipity.seity.calling.service;
 import com.serendipity.seity.calling.Calling;
 import com.serendipity.seity.calling.SseEventName;
 import com.serendipity.seity.calling.SseRepositoryKeyRule;
-import com.serendipity.seity.calling.dto.*;
+import com.serendipity.seity.calling.dto.callingrequest.*;
 import com.serendipity.seity.calling.repository.CallingRepository;
 import com.serendipity.seity.calling.repository.SseInMemoryRepository;
 import com.serendipity.seity.common.exception.BaseException;
@@ -30,7 +30,6 @@ import java.util.Optional;
 
 import static com.serendipity.seity.calling.CallingStatus.PENDING;
 import static com.serendipity.seity.calling.SseEventName.CALLING_REQUEST;
-import static com.serendipity.seity.calling.SseEventName.CALLING_SENT;
 import static com.serendipity.seity.common.response.BaseResponseStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -62,7 +61,7 @@ public class CallingService {
      * @param sender 송신자
      * @return 생성된 소명 요청 엔티티 id
      */
-    public CallingResponse createCalling(String promptDetectionId, Member sender) throws BaseException {
+    public CallingRequestResponse createCalling(String promptDetectionId, Member sender) throws BaseException {
 
         PromptDetection findDetection = promptDetectionRepository.findById(promptDetectionId).orElseThrow(
                 () -> new BaseException(INVALID_DETECTION_ID_EXCEPTION));
@@ -77,9 +76,9 @@ public class CallingService {
                 callingRepository.save(Calling.createCalling(promptDetectionId, sender.getId(), receiver.getId()));
 
         // 알람 전송
-        sendToClient(receiver, CALLING_REQUEST, CallingAlarmResponse.of(calling, prompt, findDetection.getIndex(), sender));
+        sendToClient(receiver, CALLING_REQUEST, CallingRequestAlarmResponse.of(calling, prompt, findDetection.getIndex(), sender));
 
-        return new CallingResponse(calling.getId());
+        return new CallingRequestResponse(calling.getId());
     }
 
     /**
@@ -89,20 +88,20 @@ public class CallingService {
      * @param member 현재 로그인한 사용자
      * @return 소명 요청 리스트
      */
-    public CallingPagingResponse getCallingList(int pageNumber, int pageSize, Member member) throws BaseException {
+    public CallingRequestPagingResponse getCallingList(int pageNumber, int pageSize, Member member) throws BaseException {
 
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
 
         List<Calling> findCallings = callingRepository.findByReceiverId(member.getId(), pageable);
-        List<MultipleCallingResponse> callings = new ArrayList<>();
+        List<MultipleCallingRequestResponse> callings = new ArrayList<>();
 
         for (Calling calling : findCallings) {
 
             PromptDetection findDetection = promptDetectionRepository.findById(calling.getPromptDetectionId()).orElseThrow(
                     () -> new BaseException(INVALID_DETECTION_ID_EXCEPTION));
 
-            callings.add(MultipleCallingResponse.of(
+            callings.add(MultipleCallingRequestResponse.of(
                     calling,
                     findDetection,
                     promptRepository.findById(findDetection.getPromptId()).orElseThrow(
@@ -112,7 +111,7 @@ public class CallingService {
         }
 
         int totalCallingNumber = callingRepository.countByReceiverId(member.getId());
-        return new CallingPagingResponse((totalCallingNumber - 1) / pageSize + 1, totalCallingNumber, callings);
+        return new CallingRequestPagingResponse((totalCallingNumber - 1) / pageSize + 1, totalCallingNumber, callings);
     }
 
     /**
@@ -137,8 +136,8 @@ public class CallingService {
         findCalling.sendCalling(content);
         callingRepository.save(findCalling);
 
-        // 보안 담당자에게 알람 전송
-        sendToClient(
+        // TODO: 보안 담당자에게 알람 전송
+        /*sendToClient(
                 memberRepository.findById(findCalling.getSenderId()).orElseThrow(
                         () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)),
                 CALLING_SENT,
@@ -149,7 +148,7 @@ public class CallingService {
                         findDetection.getIndex(),
                         member
                 )
-        );
+        );*/
     }
 
     /**
@@ -158,7 +157,7 @@ public class CallingService {
      * @param member 현재 로그인한 사용자
      * @return 소명 요청 정보
      */
-    public SingleCallingResponse getSingleCalling(String callingId, Member member) throws BaseException {
+    public SingleCallingRequestResponse getSingleCalling(String callingId, Member member) throws BaseException {
 
         Calling findCalling = callingRepository.findById(callingId).orElseThrow(
                 () -> new BaseException(INVALID_CALLING_ID_EXCEPTION));
@@ -166,7 +165,11 @@ public class CallingService {
         PromptDetection findDetection = promptDetectionRepository.findById(findCalling.getPromptDetectionId()).orElseThrow(
                 () -> new BaseException(INVALID_DETECTION_ID_EXCEPTION));
 
-        return SingleCallingResponse.of(
+        if (!findDetection.getUserId().equals(member.getId())) {
+            throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
+        }
+
+        return SingleCallingRequestResponse.of(
                 findCalling,
                 findDetection,
                 promptRepository.findById(findDetection.getPromptId()).orElseThrow(
@@ -176,12 +179,15 @@ public class CallingService {
 
     /**
      * 클라이언트가 서버에 SSE 방식을 사용하기 위해 구독하는 메서드입니다.
+     * TODO: nginx 이슈 해결 후 재배포
      * @param member 현재 로그인한 사용자
      * @param now 현재 시간
      * @return 생성된 SSE emitter
      * @throws BaseException SSE를 return하는 과정에서 예외가 발생한 경우
      */
     public SseEmitter subscribe(Member member, LocalDateTime now) throws BaseException {
+
+        log.info("timeout value: {}", sseTimeout);
 
         SseEmitter sse = new SseEmitter(Long.parseLong(sseTimeout));
         String key = new SseRepositoryKeyRule(member.getId(), CALLING_REQUEST, now)
@@ -205,12 +211,13 @@ public class CallingService {
         } catch (IOException e) {
             sseRepository.remove(key);
             log.error("SSE subscribe exception occurred: {}", e.getMessage());
+            e.printStackTrace();
             throw new BaseException(SSE_SEND_EXCEPTION);
         }
 
         // 직원일 경우 소명 요청에 대한 알림 전송
         if (member.getRoles().contains("USER")) {
-            List<MultipleCallingResponse> result = new ArrayList<>();
+            List<MultipleCallingRequestResponse> result = new ArrayList<>();
             List<Calling> findCallings = callingRepository.findByReceiverIdAndStatus(member.getId(), PENDING);
 
             for (Calling calling : findCallings) {
@@ -219,7 +226,7 @@ public class CallingService {
                     Optional<Prompt> findPrompt = promptRepository.findById(findDetection.get().getPromptId());
                     if (findPrompt.isPresent()) {
                         Optional<Member> findSender = memberRepository.findById(calling.getSenderId());
-                        findSender.ifPresent(value -> result.add(MultipleCallingResponse.of(
+                        findSender.ifPresent(value -> result.add(MultipleCallingRequestResponse.of(
                                 calling,
                                 findDetection.get(),
                                 findPrompt.get(),
@@ -241,17 +248,23 @@ public class CallingService {
      */
     private void sendToClient(Member receiver, SseEventName eventName, Object data) throws BaseException {
 
-        Optional<SseEmitter> sse = sseRepository.get(receiver.getId());
+        List<SseEmitter> findEmitters = sseRepository.getListByKeyPrefix(receiver.getId());
 
-        if (sse.isPresent()) {
+        if (findEmitters.isEmpty()) {
+            log.error("sse emitter가 없습니다");
+            return;
+        }
+
+        for (SseEmitter sse : findEmitters) {
             try {
-                sse.get().send(SseEmitter.event()
+                sse.send(SseEmitter.event()
                         .id(getEventId(receiver, LocalDateTime.now(), eventName))
                         .name(eventName.getValue())
                         .data(data, APPLICATION_JSON));
             } catch (IOException e) {
                 sseRepository.remove(receiver.getId());
                 log.error("SSE send exception occurred: {}", e.getMessage());
+                e.printStackTrace();
                 throw new BaseException(SSE_SEND_EXCEPTION);
             }
         }
@@ -267,6 +280,7 @@ public class CallingService {
         } catch (IOException e) {
             sseRepository.remove(receiver.getId());
             log.error("SSE send exception occurred: {}", e.getMessage());
+            e.printStackTrace();
             throw new BaseException(SSE_SEND_EXCEPTION);
         }
     }

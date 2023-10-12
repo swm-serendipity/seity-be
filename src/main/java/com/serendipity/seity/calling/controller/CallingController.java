@@ -129,4 +129,27 @@ public class CallingController {
         return new BaseResponse<>(callingService.getSingleCallingHistory(id));
     }
 
+    /**
+     * 단일 소명에 대해 허가하는 메서드입니다.
+     * @param id 소명 id
+     * @return 성공 여부
+     */
+    @PatchMapping("/solve")
+    public BaseResponse<?> solveSingleCalling(@RequestParam String id) throws BaseException {
+
+        callingService.solveCalling(id);
+        return new BaseResponse<>(SUCCESS);
+    }
+
+    /**
+     * 단일 소명에 대해 삭제하는 메서드입니다.
+     * @param id 소명 id
+     * @return 성공 여부
+     */
+    @DeleteMapping
+    public BaseResponse<?> deleteSingleCalling(@RequestParam String id) {
+
+        callingService.deleteCalling(id);
+        return new BaseResponse<>(SUCCESS);
+    }
 }

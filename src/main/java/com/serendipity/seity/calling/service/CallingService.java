@@ -3,6 +3,8 @@ package com.serendipity.seity.calling.service;
 import com.serendipity.seity.calling.Calling;
 import com.serendipity.seity.calling.SseEventName;
 import com.serendipity.seity.calling.SseRepositoryKeyRule;
+import com.serendipity.seity.calling.dto.calling.MultipleCallingResponse;
+import com.serendipity.seity.calling.dto.calling.SingleCallingResponse;
 import com.serendipity.seity.calling.dto.callingrequest.*;
 import com.serendipity.seity.calling.repository.CallingRepository;
 import com.serendipity.seity.calling.repository.SseInMemoryRepository;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.serendipity.seity.calling.CallingStatus.PENDING;
 import static com.serendipity.seity.calling.SseEventName.CALLING_REQUEST;
@@ -73,7 +76,7 @@ public class CallingService {
                 () -> new BaseException(INVALID_USER_ID_EXCEPTION));
 
         Calling calling =
-                callingRepository.save(Calling.createCalling(promptDetectionId, sender.getId(), receiver.getId()));
+                callingRepository.save(Calling.createCalling(promptDetectionId, sender.getId(), receiver.getId(), findDetection.getPart()));
 
         // 알람 전송
         sendToClient(receiver, CALLING_REQUEST, CallingRequestAlarmResponse.of(calling, prompt, findDetection.getIndex(), sender));
@@ -175,6 +178,57 @@ public class CallingService {
                 promptRepository.findById(findDetection.getPromptId()).orElseThrow(
                         () -> new BaseException(INVALID_PROMPT_ID_EXCEPTION))
                 );
+    }
+
+    /**
+     * 메시지 관리에서 소명 요청 & 소명 쌍의 리스트를 조회하는 메서드입니다.
+     * @param pageNumber 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param member 현재 로그인한 사용자
+     * @return 소명 요청 히스토리
+     */
+    public List<MultipleCallingResponse> getCallingHistory(int pageNumber, int pageSize, Member member) {
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "lastModifiedTime"));
+        List<Calling> findCallings = callingRepository.findByPart(member.getPart().getValue(), pageable);
+
+        List<MultipleCallingResponse> result = new ArrayList<>();
+        for (Calling calling : findCallings) {
+
+            Optional<Member> findMember = memberRepository.findById(calling.getReceiverId());
+            Optional<PromptDetection> findDetection = promptDetectionRepository.findById(calling.getPromptDetectionId());
+
+            if (findMember.isPresent() && findDetection.isPresent()) {
+
+                promptRepository.findById(findDetection.get().getPromptId())
+                        .ifPresent(prompt -> result.add(MultipleCallingResponse.of(calling, findMember.get(), prompt)));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 1개의 소명 히스토리를 조회하는 메서드입니다.
+     * @param id 소명 id
+     * @return 소명 히스토리
+     */
+    public SingleCallingResponse getSingleCallingHistory(String id) throws BaseException {
+
+        Calling findCalling = callingRepository.findById(id)
+                .orElseThrow(() -> new BaseException(INVALID_CALLING_ID_EXCEPTION));
+
+        PromptDetection findDetection = promptDetectionRepository.findById(findCalling.getPromptDetectionId())
+                .orElseThrow(() -> new BaseException(INVALID_DETECTION_ID_EXCEPTION));
+
+        return SingleCallingResponse.of(
+                findCalling,
+                memberRepository.findById(findCalling.getReceiverId())
+                        .orElseThrow(() -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)),
+                promptRepository.findById(findDetection.getPromptId())
+                        .orElseThrow(() -> new BaseException(INVALID_PROMPT_ID_EXCEPTION)),
+                findDetection
+        );
     }
 
     /**

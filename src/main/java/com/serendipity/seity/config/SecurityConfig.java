@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/detection").hasRole("ADMIN")
                         .requestMatchers("/detection/**").hasRole("ADMIN")
                         .requestMatchers(POST, "/calling").hasRole("ADMIN")
+                        .requestMatchers("/calling/admin/history/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilter(corsConfig.corsFilter()) // CorsFilter 등록

@@ -101,4 +101,32 @@ public class CallingController {
         return new BaseResponse<>(SUCCESS);
     }
 
+    /**
+     * 보안 담당자가 소명 & 소명 요청 히스토리 리스트를 페이징하여 조회하는 메서드입니다.
+     * @param pageNumber 페이지 번호 (0부터 시작)
+     * @param pageSize 페이지 크기
+     * @param principal 인증 정보
+     * @return 소명 히스토리
+     */
+    @GetMapping("/admin/history")
+    public BaseResponse<?> getCallingHistory(@RequestParam int pageNumber, int pageSize, Principal principal) throws BaseException {
+
+        return new BaseResponse<>(callingService.getCallingHistory(
+                pageNumber,
+                pageSize,
+                memberService.getLoginMember(principal)
+        ));
+    }
+
+    /**
+     * 단일 소명 히스토리를 조회하는 메서드입니다.
+     * @param id 소명 id
+     * @return 소명 히스토리
+     */
+    @GetMapping("/admin/history/{id}")
+    public BaseResponse<?> getSingleCallingHistory(@PathVariable String id) throws BaseException {
+
+        return new BaseResponse<>(callingService.getSingleCallingHistory(id));
+    }
+
 }

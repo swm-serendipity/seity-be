@@ -232,6 +232,30 @@ public class CallingService {
     }
 
     /**
+     * 1개의 소명에 대해 허가하는 메서드입니다.
+     * @param id 소명 id
+     */
+    public void solveCalling(String id) throws BaseException {
+
+        Calling findCalling = callingRepository.findById(id)
+                .orElseThrow(() -> new BaseException(INVALID_CALLING_ID_EXCEPTION));
+
+        findCalling.solveCalling();
+        callingRepository.save(findCalling);
+
+        // TODO: 직원에게 알람 전송
+    }
+
+    /**
+     * 1개의 소명에 대해 삭제하는 메서드입니다.
+     * @param id 소명 id
+     */
+    public void deleteCalling(String id) {
+
+        callingRepository.deleteById(id);
+    }
+
+    /**
      * 클라이언트가 서버에 SSE 방식을 사용하기 위해 구독하는 메서드입니다.
      * TODO: nginx 이슈 해결 후 재배포
      * @param member 현재 로그인한 사용자

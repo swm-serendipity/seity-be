@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import static com.serendipity.seity.calling.CallingStatus.READ;
+import static com.serendipity.seity.calling.CallingStatus.SOLVED;
 
 /**
  * 복수개의 소명 요청을 조회할 때(알림 창) 사용하는 response 클래스입니다.
@@ -28,6 +29,8 @@ public class MultipleCallingRequestResponse {
     private boolean isRead;
 
     public static MultipleCallingRequestResponse of(Calling calling, PromptDetection detection, Prompt prompt, Member sender) {
+
+        if (calling.getStatus().equals(SOLVED)) return null;
 
         boolean isRead = calling.getStatus().equals(READ);
 

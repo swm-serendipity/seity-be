@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.serendipity.seity.calling.CallingStatus.PENDING;
 import static com.serendipity.seity.calling.SseEventName.CALLING_REQUEST;
@@ -104,13 +103,17 @@ public class CallingService {
             PromptDetection findDetection = promptDetectionRepository.findById(calling.getPromptDetectionId()).orElseThrow(
                     () -> new BaseException(INVALID_DETECTION_ID_EXCEPTION));
 
-            callings.add(MultipleCallingRequestResponse.of(
+            MultipleCallingRequestResponse response = MultipleCallingRequestResponse.of(
                     calling,
                     findDetection,
                     promptRepository.findById(findDetection.getPromptId()).orElseThrow(
                             () -> new BaseException(INVALID_PROMPT_ID_EXCEPTION)),
                     member
-                    ));
+            );
+
+            if (response != null) {
+                callings.add(response);
+            }
         }
 
         int totalCallingNumber = callingRepository.countByReceiverId(member.getId());
@@ -201,7 +204,11 @@ public class CallingService {
             if (findMember.isPresent() && findDetection.isPresent()) {
 
                 promptRepository.findById(findDetection.get().getPromptId())
-                        .ifPresent(prompt -> result.add(MultipleCallingResponse.of(calling, findMember.get(), prompt)));
+                        .ifPresent(prompt -> result.add(MultipleCallingResponse.of(
+                                calling,
+                                findDetection.get(),
+                                findMember.get(),
+                                prompt)));
             }
         }
 
@@ -304,7 +311,7 @@ public class CallingService {
                     Optional<Prompt> findPrompt = promptRepository.findById(findDetection.get().getPromptId());
                     if (findPrompt.isPresent()) {
                         Optional<Member> findSender = memberRepository.findById(calling.getSenderId());
-                        findSender.ifPresent(value -> result.add(MultipleCallingRequestResponse.of(
+                        findSender.ifPresent(value -> result.add(MultipleCallingRequestResponse.of(     // TODO: read 예외처리 필요
                                 calling,
                                 findDetection.get(),
                                 findPrompt.get(),

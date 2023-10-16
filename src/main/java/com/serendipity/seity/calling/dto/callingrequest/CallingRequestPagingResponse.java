@@ -1,4 +1,4 @@
-package com.serendipity.seity.calling.dto;
+package com.serendipity.seity.calling.dto.callingrequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,9 +14,9 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CallingPagingResponse {
+public class CallingRequestPagingResponse {
 
     private int totalPages;
     private int totalCallingNumber;
-    private List<MultipleCallingResponse> callings;
+    private List<MultipleCallingRequestResponse> callings;
 }

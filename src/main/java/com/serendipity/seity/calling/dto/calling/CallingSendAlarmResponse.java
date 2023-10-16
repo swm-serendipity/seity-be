@@ -1,4 +1,4 @@
-package com.serendipity.seity.calling.dto;
+package com.serendipity.seity.calling.dto.calling;
 
 import com.serendipity.seity.calling.Calling;
 import com.serendipity.seity.member.Member;

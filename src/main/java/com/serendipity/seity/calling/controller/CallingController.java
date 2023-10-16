@@ -1,11 +1,10 @@
 package com.serendipity.seity.calling.controller;
 
-import com.serendipity.seity.calling.dto.CallingRequest;
-import com.serendipity.seity.calling.dto.CallingSendRequest;
+import com.serendipity.seity.calling.dto.callingrequest.CallingRequestRequest;
+import com.serendipity.seity.calling.dto.calling.CallingSendRequest;
 import com.serendipity.seity.calling.service.CallingService;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
-import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.member.service.MemberService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +53,7 @@ public class CallingController {
      * @throws BaseException 현재 로그인한 사용자가 없을 경우
      */
     @PostMapping
-    public BaseResponse<?> sendCallingRequest(@RequestBody CallingRequest request, Principal principal) throws BaseException {
+    public BaseResponse<?> sendCallingRequest(@RequestBody CallingRequestRequest request, Principal principal) throws BaseException {
 
         callingService.createCalling(request.getPromptDetectionId(), memberService.getLoginMember(principal));
         return new BaseResponse<>(SUCCESS);
@@ -102,4 +101,55 @@ public class CallingController {
         return new BaseResponse<>(SUCCESS);
     }
 
+    /**
+     * 보안 담당자가 소명 & 소명 요청 히스토리 리스트를 페이징하여 조회하는 메서드입니다.
+     * @param pageNumber 페이지 번호 (0부터 시작)
+     * @param pageSize 페이지 크기
+     * @param principal 인증 정보
+     * @return 소명 히스토리
+     */
+    @GetMapping("/admin/history")
+    public BaseResponse<?> getCallingHistory(@RequestParam int pageNumber, int pageSize, Principal principal) throws BaseException {
+
+        return new BaseResponse<>(callingService.getCallingHistory(
+                pageNumber,
+                pageSize,
+                memberService.getLoginMember(principal)
+        ));
+    }
+
+    /**
+     * 단일 소명 히스토리를 조회하는 메서드입니다.
+     * @param id 소명 id
+     * @return 소명 히스토리
+     */
+    @GetMapping("/admin/history/{id}")
+    public BaseResponse<?> getSingleCallingHistory(@PathVariable String id) throws BaseException {
+
+        return new BaseResponse<>(callingService.getSingleCallingHistory(id));
+    }
+
+    /**
+     * 단일 소명에 대해 허가하는 메서드입니다.
+     * @param id 소명 id
+     * @return 성공 여부
+     */
+    @PatchMapping("/solve")
+    public BaseResponse<?> solveSingleCalling(@RequestParam String id) throws BaseException {
+
+        callingService.solveCalling(id);
+        return new BaseResponse<>(SUCCESS);
+    }
+
+    /**
+     * 단일 소명에 대해 삭제하는 메서드입니다.
+     * @param id 소명 id
+     * @return 성공 여부
+     */
+    @DeleteMapping
+    public BaseResponse<?> deleteSingleCalling(@RequestParam String id) {
+
+        callingService.deleteCalling(id);
+        return new BaseResponse<>(SUCCESS);
+    }
 }

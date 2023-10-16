@@ -1,4 +1,4 @@
-package com.serendipity.seity.calling.dto;
+package com.serendipity.seity.calling.dto.callingrequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CallingRequest {
+public class CallingRequestRequest {
 
     private String promptDetectionId;
 }

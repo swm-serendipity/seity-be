@@ -1,4 +1,4 @@
-package com.serendipity.seity.calling.dto;
+package com.serendipity.seity.calling.dto.callingrequest;
 
 import com.serendipity.seity.calling.Calling;
 import com.serendipity.seity.member.Member;
@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CallingAlarmResponse {
+public class CallingRequestAlarmResponse {
 
     private String callingId;
     private String promptId;
@@ -26,7 +26,7 @@ public class CallingAlarmResponse {
     private String senderName;
     private String senderRole;
 
-    public static CallingAlarmResponse of(Calling calling, Prompt prompt, int index, Member sender) {
+    public static CallingRequestAlarmResponse of(Calling calling, Prompt prompt, int index, Member sender) {
 
         String senderRole = "보안관리팀";
 
@@ -37,7 +37,7 @@ public class CallingAlarmResponse {
             }
         }
 
-        return new CallingAlarmResponse(
+        return new CallingRequestAlarmResponse(
                 calling.getId(),
                 prompt.getId(),
                 prompt.getQnaList().get(index).getQuestion(),

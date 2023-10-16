@@ -30,6 +30,7 @@ public class SingleCallingResponse {
     private String userName;
     private String userProfileBackgroundHex;
     private String userProfileTextHex;
+    private String userPart;
     private SingleDetectionResponse detection;
     private String status;
     private String content;
@@ -45,6 +46,7 @@ public class SingleCallingResponse {
                 member.getName(),
                 member.getProfileBackgroundHex(),
                 member.getProfileTextHex(),
+                member.getPart().getValue(),
                 SingleDetectionResponse.of(prompt, member, detection),
                 calling.getStatus().getValue(),
                 calling.getContent()

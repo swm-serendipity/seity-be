@@ -88,6 +88,17 @@ public class CallingController {
     }
 
     /**
+     * 특정 사용자의 읽지 않은 소명 요청 (알람 개수)를 조회하는 메서드입니다.
+     * @param principal 인증 정보
+     * @return 읽지 않은 소명 요청 개수
+     */
+    @GetMapping("/count")
+    public BaseResponse<?> getCallingRequestCount(Principal principal) throws BaseException {
+
+        return new BaseResponse<>(callingService.getCallingRequestAlarmCount(memberService.getLoginMember(principal)));
+    }
+
+    /**
      * 1개의 소명 요청에 대해 소명을 전송하는 메서드입니다.
      * @param request 소명 정보
      * @param principal 인증 정보

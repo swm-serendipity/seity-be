@@ -23,20 +23,22 @@ public class Calling extends BaseTimeEntity {
     private String promptDetectionId;
     private String senderId;
     private String receiverId;
+    private String part;
     private CallingStatus status;
     private String content;
 
-    private Calling(String promptDetectionId, String senderId, String receiverId, CallingStatus status, String content) {
+    private Calling(String promptDetectionId, String senderId, String receiverId, String part, CallingStatus status, String content) {
         this.promptDetectionId = promptDetectionId;
         this.senderId = senderId;
         this.receiverId = receiverId;
+        this.part = part;
         this.status = status;
         this.content = content;
     }
 
-    public static Calling createCalling(String promptDetectionId, String senderId, String receiverId) {
+    public static Calling createCalling(String promptDetectionId, String senderId, String receiverId, String part) {
 
-        return new Calling(promptDetectionId, senderId, receiverId, PENDING, "");
+        return new Calling(promptDetectionId, senderId, receiverId, part, PENDING, "");
     }
 
     public void sendCalling(String content) {
@@ -48,5 +50,10 @@ public class Calling extends BaseTimeEntity {
     public void solveCalling() {
 
         this.status = SOLVED;
+    }
+
+    public void read() {
+
+        this.status = READ;
     }
 }

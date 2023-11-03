@@ -1,4 +1,4 @@
-package com.serendipity.seity.calling.dto;
+package com.serendipity.seity.calling.dto.calling;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,16 +7,17 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * 소명 요청에 대해 페이징하여 조회할 떄 사용하는 response 클래스입니다.
+ * 메시지 관리의 소명들에 대해 paging하는 response 클래스입니다.
  *
  * @author Min Ho CHO
  */
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
 public class CallingPagingResponse {
 
     private int totalPages;
     private int totalCallingNumber;
+    private int currentPageNumber;
     private List<MultipleCallingResponse> callings;
 }

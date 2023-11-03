@@ -94,7 +94,7 @@ public class PostService {
         int totalPostNumber = (int) postRepository.count();
 
         return pagingPosts(postRepository.findByOrderByCreateTimeDesc(pageable), totalPostNumber,
-                ((totalPostNumber - 1) / pageSize) + 1, member);
+                ((totalPostNumber - 1) / pageSize) + 1, member, pageNumber);
     }
 
     /**
@@ -108,7 +108,7 @@ public class PostService {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
         return pagingPosts(postRepository.findTopNByOrderByLikeNumberDesc(LocalDateTime.now().minusDays(7),
-                pageable), 0, 0, member).getPosts();
+                pageable), 0, 0, member, 0).getPosts();
 
     }
 
@@ -122,7 +122,7 @@ public class PostService {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
         return pagingPosts(postRepository.findByPartOrderByLikeNumberDesc(member.getPart().getValue(),
-                LocalDateTime.now().minusDays(7), pageable), 0, 0, member).getPosts();
+                LocalDateTime.now().minusDays(7), pageable), 0, 0, member, 0).getPosts();
     }
 
     /**
@@ -135,7 +135,7 @@ public class PostService {
     public List<MultiplePostResponse> getPopularPosts(int n, Member member) throws BaseException {
 
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "likeNumber"));
-        return pagingPosts(postRepository.findByOrderByLikesDesc(pageable), 0, 0, member).getPosts();
+        return pagingPosts(postRepository.findByOrderByLikesDesc(pageable), 0, 0, member, 0).getPosts();
     }
 
     /**
@@ -300,12 +300,11 @@ public class PostService {
 
         if (findScrap.isEmpty()) {
 
-            return pagingPosts(new ArrayList<>(), 0, 0, member);
+            return pagingPosts(new ArrayList<>(), 0, 0, member, pageNumber);
         }
 
         // 직접 페이징
         List<Post> result = new ArrayList<>();
-        int totalPageNumber = ((findScrap.get().getScrapPostList().size() - 1) / pageSize) + 1;
 
         for (int i = pageNumber * pageSize; i < pageNumber * pageSize + pageSize; i++) {
 
@@ -325,7 +324,8 @@ public class PostService {
             result.add(findPost.get());
         }
 
-        return pagingPosts(result, findScrap.get().getScrapPostList().size(), totalPageNumber, member);
+        return pagingPosts(result, findScrap.get().getScrapPostList().size(),
+                ((findScrap.get().getScrapPostList().size() - 1) / pageSize) + 1, member, pageNumber);
     }
 
     /**
@@ -343,7 +343,7 @@ public class PostService {
 
         int totalPostNumber = postRepository.countByUserId(member.getId());
 
-        return pagingPosts(findPosts, totalPostNumber, (totalPostNumber - 1) / pageSize + 1, member);
+        return pagingPosts(findPosts, totalPostNumber, (totalPostNumber - 1) / pageSize + 1, member, pageNumber);
     }
 
     /**
@@ -396,7 +396,7 @@ public class PostService {
      * @return 변환된 response
      * @throws BaseException 프롬프트 id가 유효하지 않은 경우
      */
-    private PostPagingResponse pagingPosts(List<Post> posts, int totalPostNumber, int totalPages, Member member) throws BaseException {
+    private PostPagingResponse pagingPosts(List<Post> posts, int totalPostNumber, int totalPages, Member member, int page) throws BaseException {
 
         List<MultiplePostResponse> result = new ArrayList<>();
         for (Post post : posts) {
@@ -418,6 +418,6 @@ public class PostService {
             ;
         }
 
-        return new PostPagingResponse(totalPages, totalPostNumber, result);
+        return new PostPagingResponse(totalPages, totalPostNumber, page, result);
     }
 }

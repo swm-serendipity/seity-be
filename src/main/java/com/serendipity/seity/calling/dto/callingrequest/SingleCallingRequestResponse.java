@@ -1,4 +1,4 @@
-package com.serendipity.seity.calling.dto;
+package com.serendipity.seity.calling.dto.callingrequest;
 
 import com.serendipity.seity.calling.Calling;
 import com.serendipity.seity.detection.PromptDetection;
@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SingleCallingResponse {
+public class SingleCallingRequestResponse {
 
     private String callingId;
     private String detectionId;
@@ -23,9 +23,9 @@ public class SingleCallingResponse {
     private String question;
     private String answer;
 
-    public static SingleCallingResponse of(Calling calling, PromptDetection detection, Prompt prompt) {
+    public static SingleCallingRequestResponse of(Calling calling, PromptDetection detection, Prompt prompt) {
 
-        return new SingleCallingResponse(
+        return new SingleCallingRequestResponse(
                 calling.getId(),
                 detection.getId(),
                 prompt.getId(),

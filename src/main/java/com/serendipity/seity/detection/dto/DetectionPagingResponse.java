@@ -18,5 +18,6 @@ public class DetectionPagingResponse {
 
     private int totalPages;
     private int totalDetectionNumber;
+    private int currentPageNumber;
     private List<MultipleDetectionResponse> detections;
 }

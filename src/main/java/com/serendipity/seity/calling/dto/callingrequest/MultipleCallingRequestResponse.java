@@ -1,4 +1,4 @@
-package com.serendipity.seity.calling.dto;
+package com.serendipity.seity.calling.dto.callingrequest;
 
 import com.serendipity.seity.calling.Calling;
 import com.serendipity.seity.detection.PromptDetection;
@@ -9,33 +9,38 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import static com.serendipity.seity.calling.CallingStatus.READ;
+import static com.serendipity.seity.calling.CallingStatus.SOLVED;
 
 /**
- * 복수개의 소명을 조회할 때(알림 창) 사용하는 response 클래스입니다.
+ * 복수개의 소명 요청을 조회할 때(알림 창) 사용하는 response 클래스입니다.
  *
  * @author Min Ho CHO
  */
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MultipleCallingResponse {
+public class MultipleCallingRequestResponse {
 
     private String callingId;
     private String senderProfileBackgroundHex;
     private String senderProfileTextHex;
     private String senderRole;
+    private String senderName;
     private String question;
     private boolean isRead;
 
-    public static MultipleCallingResponse of(Calling calling, PromptDetection detection, Prompt prompt, Member sender) {
+    public static MultipleCallingRequestResponse of(Calling calling, PromptDetection detection, Prompt prompt, Member sender) {
+
+        if (calling.getStatus().equals(SOLVED)) return null;
 
         boolean isRead = calling.getStatus().equals(READ);
 
-        return new MultipleCallingResponse(
+        return new MultipleCallingRequestResponse(
                 calling.getId(),
                 sender.getProfileBackgroundHex(),
                 sender.getProfileTextHex(),
                 "보안관리팀",
+                sender.getName(),
                 prompt.getQnaList().get(detection.getIndex()).getQuestion(),
                 isRead
                 );

@@ -3,6 +3,7 @@ package com.serendipity.seity.calling.service;
 import com.serendipity.seity.calling.Calling;
 import com.serendipity.seity.calling.SseEventName;
 import com.serendipity.seity.calling.SseRepositoryKeyRule;
+import com.serendipity.seity.calling.dto.calling.CallingPagingResponse;
 import com.serendipity.seity.calling.dto.calling.MultipleCallingResponse;
 import com.serendipity.seity.calling.dto.calling.SingleCallingResponse;
 import com.serendipity.seity.calling.dto.callingrequest.*;
@@ -96,7 +97,7 @@ public class CallingService {
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
 
-        List<Calling> findCallings = callingRepository.findByReceiverId(member.getId(), pageable);
+        List<Calling> findCallings = callingRepository.findByReceiverIdOrderByCreateTime(member.getId());
         List<Calling> targetCallings = new ArrayList<>();
         List<MultipleCallingRequestResponse> callings = new ArrayList<>();
 
@@ -133,7 +134,6 @@ public class CallingService {
         List<MultipleCallingRequestResponse> result = new ArrayList<>();
 
         // 직접 페이징
-        int totalPageNumber = ((count - 1) / pageSize) + 1;
 
         for (int i = pageNumber * pageSize; i < pageNumber * pageSize + pageSize; i++) {
 
@@ -145,7 +145,7 @@ public class CallingService {
             result.add(callings.get(i));
         }
 
-        return new CallingRequestPagingResponse(totalPageNumber, count, result);
+        return new CallingRequestPagingResponse(((count - 1) / pageSize) + 1, count, pageNumber, result);
     }
 
     /**
@@ -221,7 +221,7 @@ public class CallingService {
      * @param member 현재 로그인한 사용자
      * @return 소명 요청 히스토리
      */
-    public List<MultipleCallingResponse> getCallingHistory(int pageNumber, int pageSize, Member member) {
+    public CallingPagingResponse getCallingHistory(int pageNumber, int pageSize, Member member) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "lastModifiedTime"));
         List<Calling> findCallings = callingRepository.findByPart(member.getPart().getValue(), pageable);
@@ -243,7 +243,9 @@ public class CallingService {
             }
         }
 
-        return result;
+        int count = callingRepository.countByPart(member.getPart().getValue());
+
+        return new CallingPagingResponse((count - 1) / pageSize + 1, count, pageNumber, result);
     }
 
     /**
@@ -301,7 +303,7 @@ public class CallingService {
     public CallingRequestAlarmCountResponse getCallingRequestAlarmCount(Member member) {
 
         int result = 0;
-        List<Calling> findCallings = callingRepository.findByReceiverId(member.getId());
+        List<Calling> findCallings = callingRepository.findByReceiverIdOrderByCreateTime(member.getId());
 
         for (Calling calling : findCallings) {
 

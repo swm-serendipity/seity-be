@@ -51,4 +51,9 @@ public class Calling extends BaseTimeEntity {
 
         this.status = SOLVED;
     }
+
+    public void read() {
+
+        this.status = READ;
+    }
 }

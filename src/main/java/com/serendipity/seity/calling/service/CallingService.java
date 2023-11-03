@@ -3,6 +3,7 @@ package com.serendipity.seity.calling.service;
 import com.serendipity.seity.calling.Calling;
 import com.serendipity.seity.calling.SseEventName;
 import com.serendipity.seity.calling.SseRepositoryKeyRule;
+import com.serendipity.seity.calling.dto.calling.CallingPagingResponse;
 import com.serendipity.seity.calling.dto.calling.MultipleCallingResponse;
 import com.serendipity.seity.calling.dto.calling.SingleCallingResponse;
 import com.serendipity.seity.calling.dto.callingrequest.*;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.serendipity.seity.calling.CallingStatus.PENDING;
+import static com.serendipity.seity.calling.CallingStatus.READ;
 import static com.serendipity.seity.calling.SseEventName.CALLING_REQUEST;
 import static com.serendipity.seity.common.response.BaseResponseStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -95,10 +97,22 @@ public class CallingService {
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
 
-        List<Calling> findCallings = callingRepository.findByReceiverId(member.getId(), pageable);
+        List<Calling> findCallings = callingRepository.findByReceiverIdOrderByCreateTime(member.getId());
+        List<Calling> targetCallings = new ArrayList<>();
         List<MultipleCallingRequestResponse> callings = new ArrayList<>();
 
+        int count = 0;
         for (Calling calling : findCallings) {
+
+            if (calling.getStatus() == PENDING || calling.getStatus() == READ) {
+                // 소명을 보내지 않은 상태에 대해서만 조회하도록 설정
+                count++;
+                targetCallings.add(calling);
+            }
+
+        }
+
+        for (Calling calling : targetCallings) {
 
             PromptDetection findDetection = promptDetectionRepository.findById(calling.getPromptDetectionId()).orElseThrow(
                     () -> new BaseException(INVALID_DETECTION_ID_EXCEPTION));
@@ -108,7 +122,8 @@ public class CallingService {
                     findDetection,
                     promptRepository.findById(findDetection.getPromptId()).orElseThrow(
                             () -> new BaseException(INVALID_PROMPT_ID_EXCEPTION)),
-                    member
+                    memberRepository.findById(calling.getSenderId()).orElseThrow(
+                            () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION))
             );
 
             if (response != null) {
@@ -116,8 +131,21 @@ public class CallingService {
             }
         }
 
-        int totalCallingNumber = callingRepository.countByReceiverId(member.getId());
-        return new CallingRequestPagingResponse((totalCallingNumber - 1) / pageSize + 1, totalCallingNumber, callings);
+        List<MultipleCallingRequestResponse> result = new ArrayList<>();
+
+        // 직접 페이징
+
+        for (int i = pageNumber * pageSize; i < pageNumber * pageSize + pageSize; i++) {
+
+            if (i >= count) {
+
+                break;
+            }
+
+            result.add(callings.get(i));
+        }
+
+        return new CallingRequestPagingResponse(((count - 1) / pageSize) + 1, count, pageNumber, result);
     }
 
     /**
@@ -175,6 +203,9 @@ public class CallingService {
             throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
         }
 
+        findCalling.read();
+        callingRepository.save(findCalling);
+
         return SingleCallingRequestResponse.of(
                 findCalling,
                 findDetection,
@@ -190,7 +221,7 @@ public class CallingService {
      * @param member 현재 로그인한 사용자
      * @return 소명 요청 히스토리
      */
-    public List<MultipleCallingResponse> getCallingHistory(int pageNumber, int pageSize, Member member) {
+    public CallingPagingResponse getCallingHistory(int pageNumber, int pageSize, Member member) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "lastModifiedTime"));
         List<Calling> findCallings = callingRepository.findByPart(member.getPart().getValue(), pageable);
@@ -212,7 +243,9 @@ public class CallingService {
             }
         }
 
-        return result;
+        int count = callingRepository.countByPart(member.getPart().getValue());
+
+        return new CallingPagingResponse((count - 1) / pageSize + 1, count, pageNumber, result);
     }
 
     /**
@@ -260,6 +293,27 @@ public class CallingService {
     public void deleteCalling(String id) {
 
         callingRepository.deleteById(id);
+    }
+
+    /**
+     * 사용자의 소명 요청 알림 개수를 조회하는 메서드입니다.
+     * @param member 현재 로그인한 사용자
+     * @return 사용자의 소명 요청 알림 개수
+     */
+    public CallingRequestAlarmCountResponse getCallingRequestAlarmCount(Member member) {
+
+        int result = 0;
+        List<Calling> findCallings = callingRepository.findByReceiverIdOrderByCreateTime(member.getId());
+
+        for (Calling calling : findCallings) {
+
+            if (calling.getStatus() == PENDING) {
+
+                result++;
+            }
+        }
+
+        return new CallingRequestAlarmCountResponse(result);
     }
 
     /**

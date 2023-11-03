@@ -101,7 +101,8 @@ public class PromptDetectionService {
         return pagingDetections(
                 findDetectionList,
                 promptDetectionRepository.findPromptDetectionByIsDetectedAndPartOrderByCreateTimeDesc(true, member.getPart().getValue()).size(),
-                pageSize);
+                pageSize,
+                pageNumber);
     }
 
     /**
@@ -172,7 +173,7 @@ public class PromptDetectionService {
         promptDetectionRepository.deleteById(id);
     }
 
-    private DetectionPagingResponse pagingDetections(List<PromptDetection> detections, int totalDetectionNumber, int pageSize) {
+    private DetectionPagingResponse pagingDetections(List<PromptDetection> detections, int totalDetectionNumber, int pageSize, int page) {
 
         List<MultipleDetectionResponse> result = new ArrayList<>();
 
@@ -184,7 +185,7 @@ public class PromptDetectionService {
                     detection));
         }
 
-        return new DetectionPagingResponse((totalDetectionNumber - 1) / pageSize + 1, totalDetectionNumber, result);
+        return new DetectionPagingResponse((totalDetectionNumber - 1) / pageSize + 1, totalDetectionNumber, page, result);
     }
 
 }

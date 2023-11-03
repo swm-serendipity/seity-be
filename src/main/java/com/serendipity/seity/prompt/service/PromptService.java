@@ -13,6 +13,7 @@ import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
 import com.serendipity.seity.prompt.dto.ChatGptMessageRequest;
 import com.serendipity.seity.prompt.dto.PromptPagingResponse;
+import com.serendipity.seity.prompt.dto.SinglePromptPagingResponse;
 import com.serendipity.seity.prompt.dto.PromptResponse;
 import com.serendipity.seity.prompt.repository.PromptRepository;
 import jakarta.transaction.Transactional;
@@ -95,17 +96,19 @@ public class PromptService {
      * TODO: 기존 for문 제거하고 람다식으로 진행
      * TODO: 포매팅을 제거 -> 원본 데이터를 넘겨버리고 클라이언트가 선택
      */
-    public List<PromptPagingResponse> getLatestPromptsByUserId(String userId, int pageNumber, int pageSize) {
+    public PromptPagingResponse getLatestPromptsByUserId(String userId, int pageNumber, int pageSize) {
 
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "lastModifiedTime"));
 
-        List<PromptPagingResponse> result = new ArrayList<>();
+        List<SinglePromptPagingResponse> result = new ArrayList<>();
         for (Prompt prompt : promptRepository.findByUserIdAndIsExistOrderByLastModifiedTimeDesc(userId, true, pageable)) {
-            result.add(PromptPagingResponse.of(prompt));
+            result.add(SinglePromptPagingResponse.of(prompt));
         }
 
-        return result;
+        int count = promptRepository.countByUserId(userId);
+
+        return new PromptPagingResponse((count - 1) / pageSize + 1, count, pageNumber, result);
     }
 
     /**

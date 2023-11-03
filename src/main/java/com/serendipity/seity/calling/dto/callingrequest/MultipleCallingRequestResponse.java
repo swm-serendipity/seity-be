@@ -25,6 +25,7 @@ public class MultipleCallingRequestResponse {
     private String senderProfileBackgroundHex;
     private String senderProfileTextHex;
     private String senderRole;
+    private String senderName;
     private String question;
     private boolean isRead;
 
@@ -39,6 +40,7 @@ public class MultipleCallingRequestResponse {
                 sender.getProfileBackgroundHex(),
                 sender.getProfileTextHex(),
                 "보안관리팀",
+                sender.getName(),
                 prompt.getQnaList().get(detection.getIndex()).getQuestion(),
                 isRead
                 );

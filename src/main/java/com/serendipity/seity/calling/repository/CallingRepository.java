@@ -14,9 +14,10 @@ import java.util.List;
  */
 public interface CallingRepository extends MongoRepository<Calling, String> {
 
-    List<Calling> findByReceiverId(String receiverId);
+    List<Calling> findByReceiverIdOrderByCreateTime(String receiverId);
     List<Calling> findByReceiverId(String receiverId, Pageable pageable);
     int countByReceiverId(String receiverId);
     List<Calling> findByReceiverIdAndStatus(String receiverId, CallingStatus status);
     List<Calling> findByPart(String part, Pageable pageable);
+    int countByPart(String part);
 }

@@ -18,5 +18,6 @@ public class PostPagingResponse {
 
     private int totalPages;
     private int totalPostNumber;
+    private int currentPageNumber;
     private List<MultiplePostResponse> posts;
 }

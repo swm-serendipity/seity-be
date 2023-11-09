@@ -23,6 +23,7 @@ import java.util.Collection;
 public class RefreshToken {
 
     private String id;
+    private String userId;
     private Collection<? extends GrantedAuthority> authorities;
 
     @Indexed

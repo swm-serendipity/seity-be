@@ -79,8 +79,8 @@ public class CallingService {
         Calling calling =
                 callingRepository.save(Calling.createCalling(promptDetectionId, sender.getId(), receiver.getId(), findDetection.getPart()));
 
-        // 알람 전송
-        sendToClient(receiver, CALLING_REQUEST, CallingRequestAlarmResponse.of(calling, prompt, findDetection.getIndex(), sender));
+        // TODO: 알람 전송
+        //sendToClient(receiver, CALLING_REQUEST, CallingRequestAlarmResponse.of(calling, prompt, findDetection.getIndex(), sender));
 
         return new CallingRequestResponse(calling.getId());
     }
@@ -274,14 +274,17 @@ public class CallingService {
     /**
      * 1개의 소명에 대해 허가하는 메서드입니다.
      * @param id 소명 id
+     * @return 해결한 prompt detection id
      */
-    public void solveCalling(String id) throws BaseException {
+    public String solveCalling(String id) throws BaseException {
 
         Calling findCalling = callingRepository.findById(id)
                 .orElseThrow(() -> new BaseException(INVALID_CALLING_ID_EXCEPTION));
 
         findCalling.solveCalling();
         callingRepository.save(findCalling);
+
+        return findCalling.getPromptDetectionId();
 
         // TODO: 직원에게 알람 전송
     }

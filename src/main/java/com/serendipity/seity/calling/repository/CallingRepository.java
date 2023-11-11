@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 소명 엔티티에 대한 repository 클래스입니다.
@@ -20,4 +21,5 @@ public interface CallingRepository extends MongoRepository<Calling, String> {
     List<Calling> findByReceiverIdAndStatus(String receiverId, CallingStatus status);
     List<Calling> findByPart(String part, Pageable pageable);
     int countByPart(String part);
+    Optional<Calling> findByPromptDetectionId(String promptDetectionId);
 }

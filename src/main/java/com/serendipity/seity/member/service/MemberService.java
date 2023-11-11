@@ -52,6 +52,9 @@ public class MemberService {
      */
     public LoginResponse login(LoginRequest request) throws BaseException {
 
+        Member findMember = memberRepository.findByLoginId(request.getLoginId()).orElseThrow(
+                () -> new BaseException(INVALID_LOGIN_ID_OR_PASSWORD));
+
         // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
         // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -74,14 +77,14 @@ public class MemberService {
         refreshTokenRedisRepository.save(RefreshToken.builder()
                 .id(authentication.getName())
                 .authorities(authentication.getAuthorities())
+                .userId(findMember.getId())
                 .refreshToken(tokenDto.getRefreshToken())
                 .build());
 
         return new LoginResponse(
                 tokenDto.getAccessToken(),
                 tokenDto.getRefreshToken(),
-                memberRepository.findByLoginId(request.getLoginId()).orElseThrow(
-                        () -> new BaseException(INVALID_LOGIN_ID_OR_PASSWORD)).getRoles());
+                findMember.getRoles());
     }
 
     /**
@@ -125,23 +128,29 @@ public class MemberService {
             RefreshToken refreshToken = refreshTokenRedisRepository.findByRefreshToken(token);
 
             if (refreshToken != null) {
-                log.error("refreshToken을 redis에서 찾을 수 없음");
+
+                Member findMember =
+                        memberRepository.findById(refreshToken.getUserId()).orElseThrow(
+                                () -> new BaseException(INVALID_REFRESH_TOKEN_USER_ID_EXCEPTION));
+
+                log.info("[refresh token 정보]");
+                log.info("사용자 로그인 id: {}", findMember.getLoginId());
 
                 // 4. token 재발급
                 TokenDto tokenDto = jwtTokenProvider.generateToken(refreshToken.getId(), refreshToken.getAuthorities());
 
                 // 5. redis update
-                refreshTokenRedisRepository.save(RefreshToken.builder()
-                                .id(refreshToken.getId())
-                                .authorities(refreshToken.getAuthorities())
-                                .refreshToken(tokenDto.getRefreshToken())
-                                .build());
+                RefreshToken newToken = refreshTokenRedisRepository.save(RefreshToken.builder()
+                        .id(refreshToken.getId())
+                        .authorities(refreshToken.getAuthorities())
+                        .userId(refreshToken.getUserId())
+                        .refreshToken(tokenDto.getRefreshToken())
+                        .build());
 
                 return new LoginResponse(
                         tokenDto.getAccessToken(),
                         tokenDto.getRefreshToken(),
-                        memberRepository.findById(refreshToken.getId()).orElseThrow(
-                                () -> new BaseException(INVALID_MEMBER_ID_EXCEPTION)).getRoles());
+                        findMember.getRoles());
             }
         }
 
@@ -173,6 +182,19 @@ public class MemberService {
             result.add(MentionMemberResponse.of(member));
         }
         return result;
+    }
+
+    /**
+     * 로그아웃 시 refresh token을 삭제하는 메서드입니다.
+     * @param refreshToken refresh token
+     */
+    public void deleteRefreshToken(String refreshToken) {
+
+        RefreshToken findToken = refreshTokenRedisRepository.findByRefreshToken(refreshToken);
+
+        if (findToken != null) {
+            refreshTokenRedisRepository.delete(findToken);
+        }
     }
 
     // Request Header 에서 토큰 정보 추출

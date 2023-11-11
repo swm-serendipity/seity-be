@@ -95,4 +95,17 @@ public class MemberController {
 
         return new BaseResponse<>(memberService.getAllMemberForMention());
     }
+
+    /**
+     * 로그아웃 메서드입니다.
+     * refresh token을 삭제합니다.
+     * @param refreshToken refresh token
+     * @return 성공 여부
+     */
+    @DeleteMapping("/user/logout")
+    public BaseResponse<?> logout(@RequestParam String refreshToken) {
+
+        memberService.deleteRefreshToken(refreshToken);
+        return new BaseResponse<>(SUCCESS);
+    }
 }

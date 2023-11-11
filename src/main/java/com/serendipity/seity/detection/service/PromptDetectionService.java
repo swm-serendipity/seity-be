@@ -1,5 +1,6 @@
 package com.serendipity.seity.detection.service;
 
+import com.serendipity.seity.calling.repository.CallingRepository;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.detection.DetectionInfo;
 import com.serendipity.seity.detection.DetectionStatus;
@@ -40,6 +41,7 @@ public class PromptDetectionService {
     private final PromptDetectionRepository promptDetectionRepository;
     private final PromptRepository promptRepository;
     private final MemberRepository memberRepository;
+    private final CallingRepository callingRepository;
 
     /**
      * 민감정보 탐지 엔티티를 생성하는 메서드입니다.
@@ -92,10 +94,12 @@ public class PromptDetectionService {
 
         for (PromptDetection detection : findDetectionList) {
 
-            result.add(MultipleDetectionResponse.of(
-                    promptRepository.findById(detection.getPromptId()),
-                    memberRepository.findById(detection.getUserId()),
-                    detection));
+            if (callingRepository.findByPromptDetectionId(detection.getId()).isEmpty()) {
+                result.add(MultipleDetectionResponse.of(
+                        promptRepository.findById(detection.getPromptId()),
+                        memberRepository.findById(detection.getUserId()),
+                        detection));
+            }
         }
 
         return pagingDetections(
@@ -133,9 +137,8 @@ public class PromptDetectionService {
     /**
      * 1개의 민감정보 탐지 내역에 대해 해결된 것으로 갱신하는 메서드입니다.
      * @param id PromptDetection id
-     * @param index 대상 탐지 내역의 index
      */
-    public void solvePromptDetection(String id, int index, Member member) throws BaseException {
+    public void solvePromptDetection(String id, Member member) throws BaseException {
 
         PromptDetection findDetection = promptDetectionRepository.findById(id).orElseThrow(
                 () -> new BaseException(INVALID_DETECTION_ID_EXCEPTION));
@@ -151,7 +154,7 @@ public class PromptDetectionService {
             throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
         }
 
-        findDetection.solveDetection(index);
+        findDetection.solveDetection();
         promptDetectionRepository.save(findDetection);
     }
 
@@ -161,11 +164,9 @@ public class PromptDetectionService {
      */
     public void deletePromptDetection(String id, Member member) throws BaseException {
 
-        PromptDetection findDetection
-                = promptDetectionRepository.findById(id).orElseThrow(
-                        () -> new BaseException(INVALID_PROMPT_DETECTION_ID_EXCEPTION));
+        Optional<PromptDetection> findDetection = promptDetectionRepository.findById(id);
 
-        if (!findDetection.getPart().equals(member.getPart().getValue())) {
+        if (findDetection.isPresent() && !findDetection.get().getPart().equals(member.getPart().getValue())) {
 
             throw new BaseException(INVALID_USER_ACCESS_EXCEPTION);
         }

@@ -5,6 +5,7 @@ import com.serendipity.seity.calling.dto.calling.CallingSendRequest;
 import com.serendipity.seity.calling.service.CallingService;
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
+import com.serendipity.seity.detection.service.PromptDetectionService;
 import com.serendipity.seity.member.service.MemberService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class CallingController {
 
     private final CallingService callingService;
     private final MemberService memberService;
+    private final PromptDetectionService promptDetectionService;
 
     /**
      * SSE 방식을 사용하기 위해 클라이언트가 구독 요청을 하는 메서드입니다.
@@ -146,9 +148,9 @@ public class CallingController {
      * @return 성공 여부
      */
     @PatchMapping("/solve")
-    public BaseResponse<?> solveSingleCalling(@RequestParam String id) throws BaseException {
+    public BaseResponse<?> solveSingleCalling(@RequestParam String id, Principal principal) throws BaseException {
 
-        callingService.solveCalling(id);
+        promptDetectionService.solvePromptDetection(callingService.solveCalling(id), memberService.getLoginMember(principal));
         return new BaseResponse<>(SUCCESS);
     }
 

@@ -55,10 +55,11 @@ public class PromptDetection extends BaseTimeEntity {
 
     /**
      * 1개의 탐지 내역에 대해 해결되었다고 갱신하는 메서드입니다.
-     * @param index 탐지 내역 index
      */
-    public void solveDetection(int index) {
+    public void solveDetection() {
 
-        detectionWords.get(index).solve();
+        for (DetectionWord word : detectionWords) {
+            word.solve();
+        }
     }
 }

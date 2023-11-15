@@ -4,6 +4,7 @@ import com.serendipity.seity.common.BaseTimeEntity;
 import com.serendipity.seity.member.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 금칙어를 나타내는 클래스입니다.
@@ -12,6 +13,7 @@ import lombok.Getter;
  */
 @Entity
 @Getter
+@NoArgsConstructor
 public class ForbiddenWord extends BaseTimeEntity {
 
     @Id

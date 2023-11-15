@@ -4,6 +4,7 @@ import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.forbiddenword.ForbiddenWord;
 import com.serendipity.seity.forbiddenword.dto.CreateForbiddenWordRequest;
+import com.serendipity.seity.forbiddenword.dto.CreateForbiddenWordResponse;
 import com.serendipity.seity.forbiddenword.dto.ForbiddenWordResponse;
 import com.serendipity.seity.forbiddenword.repository.ForbiddenWordRepository;
 import com.serendipity.seity.member.Member;
@@ -33,14 +34,14 @@ public class ForbiddenWordService {
      * @param request 등록하려는 금칙어
      * @param member 현재 로그인한 사용자
      */
-    public void createForbiddenWord(CreateForbiddenWordRequest request, Member member) throws BaseException {
+    public CreateForbiddenWordResponse createForbiddenWord(CreateForbiddenWordRequest request, Member member) throws BaseException {
 
         if (forbiddenWordRepository.findByValue(request.getValue()).isPresent()) {
 
             throw new BaseException(ALREADY_EXIST_FORBIDDEN_WORD);
         }
 
-        forbiddenWordRepository.save(ForbiddenWord.createForbiddenWord(member, request.getValue()));
+        return new CreateForbiddenWordResponse(forbiddenWordRepository.save(ForbiddenWord.createForbiddenWord(member, request.getValue())).getId());
     }
 
     /**

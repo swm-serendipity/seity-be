@@ -76,6 +76,11 @@ public class CallingService {
         Member receiver = memberRepository.findById(prompt.getUserId()).orElseThrow(
                 () -> new BaseException(INVALID_USER_ID_EXCEPTION));
 
+        if (callingRepository.findByPromptDetectionId(promptDetectionId).isPresent()) {
+
+            throw new BaseException(ALREADY_CREATED_CALLING);
+        }
+
         Calling calling =
                 callingRepository.save(Calling.createCalling(promptDetectionId, sender.getId(), receiver.getId(), findDetection.getPart()));
 

@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @EnableJpaAuditing
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = { "com.serendipity.seity.member" })
+@EnableJpaRepositories(basePackages = { "com.serendipity.seity.member", "com.serendipity.seity.forbiddenword" })
 @EnableMongoRepositories(basePackages = { "com.serendipity.seity.prompt", "com.serendipity.seity.post",
 		"com.serendipity.seity.detection", "com.serendipity.seity.calling" })
 public class SeityApplication {

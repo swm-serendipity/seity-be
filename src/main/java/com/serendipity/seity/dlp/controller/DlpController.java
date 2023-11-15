@@ -3,8 +3,11 @@ package com.serendipity.seity.dlp.controller;
 import com.serendipity.seity.common.response.BaseResponse;
 import com.serendipity.seity.dlp.dto.DlpRequest;
 import com.serendipity.seity.dlp.service.DlpService;
+import com.serendipity.seity.dlp.service.GoogleDlpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class DlpController {
 
+    private final GoogleDlpService googleDlpService;
     private final DlpService dlpService;
 
     /**
@@ -29,13 +33,24 @@ public class DlpController {
     @PostMapping("/de-identification")
     public BaseResponse<?> deIdentification(@RequestBody DlpRequest request) {
 
-        return new BaseResponse<>(dlpService.callDlpApi(request.getQuestion()));
+        return new BaseResponse<>(googleDlpService.callDlpApi(request.getQuestion()));
     }
 
     @PostMapping("/de-identification/name")
     public BaseResponse<?> deIdentificationWithName(@RequestBody DlpRequest request) {
 
-        return new BaseResponse<>(dlpService.callDlpApiForName(request.getQuestion()));
+        return new BaseResponse<>(googleDlpService.callDlpApiForName(request.getQuestion()));
     }
 
+    /**
+     * 자체 개발된 dlp 서버로의 비식별화 메서드입니다.
+     * @return dlp 서버로부터의 http response
+     */
+    @PostMapping("/v2/de-identification")
+    public ResponseEntity<String> deIdentificationV2(@RequestBody DlpRequest request) {
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(dlpService.sendRequest(request.getQuestion()));
+    }
 }

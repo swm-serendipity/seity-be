@@ -51,17 +51,18 @@ public class PromptController {
             throws BaseException {
 
         try {
-            List<ChatGptMessageRequest> previousPromptList = request.getQuestion() == null
-                    ? new ArrayList<>() : promptService.generateAssistantRequest(request.getSessionId());
+            AssistantPromptDto previousPromptInfo = request.getSessionId() == null
+                    ? new AssistantPromptDto(new ArrayList<>(), request.getChatModel()) : promptService.generateAssistantRequest(request.getSessionId());
 
             request.init();
 
             Flux<String> responseFlux = chatGptService.ask(
-                    previousPromptList,
+                    previousPromptInfo.getAssistantPrompt(),
                     request.getDetections(),
                     request.getSessionId(),
                     request.getQuestion(),
-                    memberService.getLoginMember(principal)
+                    memberService.getLoginMember(principal),
+                    previousPromptInfo.getChatModel()
             );
 
             return ResponseEntity.ok()
@@ -87,16 +88,17 @@ public class PromptController {
             throws BaseException {
 
         try {
-            List<ChatGptMessageRequest> previousPromptList = promptService.generateAssistantRequestForContinueAsk(
+            AssistantPromptDto previousPromptInfo = promptService.generateAssistantRequestForContinueAsk(
                     sessionId,
                     memberService.getLoginMember(principal));
 
             Flux<String> responseFlux = chatGptService.ask(
-                    previousPromptList,
+                    previousPromptInfo.getAssistantPrompt(),
                     null,
                     sessionId,
                     null,
-                    memberService.getLoginMember(principal)
+                    memberService.getLoginMember(principal),
+                    previousPromptInfo.getChatModel()
             );
 
             return ResponseEntity.ok()

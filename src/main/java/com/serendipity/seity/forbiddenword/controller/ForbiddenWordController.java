@@ -48,8 +48,7 @@ public class ForbiddenWordController {
     public BaseResponse<?> createForbiddenWord(@RequestBody CreateForbiddenWordRequest request, Principal principal)
             throws BaseException {
 
-        forbiddenWordService.createForbiddenWord(request, memberService.getLoginMember(principal));
-        return new BaseResponse<>(SUCCESS);
+        return new BaseResponse<>(forbiddenWordService.createForbiddenWord(request, memberService.getLoginMember(principal)));
     }
 
     /**

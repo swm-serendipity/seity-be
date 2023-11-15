@@ -7,7 +7,7 @@ public class ChatGptConfig {
 
     public static final String AUTHORIZATION = "Authorization";
     public static final String BEARER = "Bearer ";
-    public static final String CHAT_MODEL = "gpt-3.5-turbo";
+    private static final String[] CHAT_MODEL = { "gpt-3.5-turbo", "gpt-4" };
     public static final Integer MAX_TOKEN = 1000;
     public static final Boolean STREAM = true;
     public static final String USER_ROLE = "user";
@@ -19,4 +19,17 @@ public class ChatGptConfig {
     public static final String DONE_MESSAGE = "[DONE]";
     public static final String PROCEEDING_RESPONSE = "proceeding";
     public static final int MAX_TOKEN_SIZE = 4000;
+
+    public static String getChatModel(String chatModel) {
+
+        for (String model : CHAT_MODEL) {
+
+            if (chatModel.equals(model)) {
+                return model;
+            }
+        }
+
+        // invalid한 값을 입력했을 경우 default로 gpt 3.5 turbo로 동작
+        return "gpt-3.5-turbo";
+    }
 }

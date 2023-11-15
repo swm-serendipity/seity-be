@@ -22,6 +22,8 @@ public class PromptAskRequest {
 
     @NotBlank(message = "질문을 입력해주세요.")
     private String question;
+    @NotBlank(message = "chat model을 입력해주세요.")
+    private String chatModel;
 
     private List<DetectionRequest> detections;
 

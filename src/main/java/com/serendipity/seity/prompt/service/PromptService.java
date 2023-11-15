@@ -11,10 +11,7 @@ import com.serendipity.seity.member.Member;
 import com.serendipity.seity.post.repository.PostRepository;
 import com.serendipity.seity.prompt.Prompt;
 import com.serendipity.seity.prompt.Qna;
-import com.serendipity.seity.prompt.dto.ChatGptMessageRequest;
-import com.serendipity.seity.prompt.dto.PromptPagingResponse;
-import com.serendipity.seity.prompt.dto.SinglePromptPagingResponse;
-import com.serendipity.seity.prompt.dto.PromptResponse;
+import com.serendipity.seity.prompt.dto.*;
 import com.serendipity.seity.prompt.repository.PromptRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -55,12 +52,12 @@ public class PromptService {
      * @param answer   답변
      * @param member   현재 로그인한 사용자
      */
-    public Prompt savePrompt(String id, String question, String answer, Member member) {
+    public Prompt savePrompt(String id, String question, String answer, Member member, String chatModel) {
 
         Optional<Prompt> findPrompt = promptRepository.findById(id);
 
         if (findPrompt.isEmpty()) {
-            return promptRepository.save(createPrompt(id, member.getId(), "ChatGPT",
+            return promptRepository.save(createPrompt(id, member.getId(), chatModel,
                     new Qna(question, answer)));
         }
 
@@ -193,10 +190,10 @@ public class PromptService {
      * @return 생성된 assistant request
      * @throws BaseException 프롬프트 세션 id가 유효하지 않은 경우
      */
-    public List<ChatGptMessageRequest> generateAssistantRequest(String id) throws BaseException {
+    public AssistantPromptDto generateAssistantRequest(String id) throws BaseException {
 
         if (id == null) {
-            return new ArrayList<>();
+            return null;
         }
 
         Prompt findPrompt =
@@ -225,7 +222,7 @@ public class PromptService {
 
         Collections.reverse(result);
 
-        return result;
+        return new AssistantPromptDto(result, findPrompt.getLlm());
     }
 
     /**
@@ -235,7 +232,7 @@ public class PromptService {
      * @return 생성된 assistant request
      * @throws BaseException 프롬프트 세션 id가 유효하지 않은 경우
      */
-    public List<ChatGptMessageRequest> generateAssistantRequestForContinueAsk(String id, Member member)
+    public AssistantPromptDto generateAssistantRequestForContinueAsk(String id, Member member)
             throws BaseException {
 
         Prompt findPrompt =
@@ -253,6 +250,6 @@ public class PromptService {
         result.add(new ChatGptMessageRequest(ChatGptConfig.ASSISTANT_ROLE,
                 findPrompt.getQnaList().get(findPrompt.getQnaList().size() - 1).getAnswer()));
 
-        return result;
+        return new AssistantPromptDto(result, findPrompt.getLlm());
     }
 }

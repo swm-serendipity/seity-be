@@ -1,5 +1,7 @@
 package com.serendipity.seity.forbiddenword.service;
 
+import com.serendipity.seity.common.exception.BaseException;
+import com.serendipity.seity.common.response.BaseResponseStatus;
 import com.serendipity.seity.forbiddenword.ForbiddenWord;
 import com.serendipity.seity.forbiddenword.dto.CreateForbiddenWordRequest;
 import com.serendipity.seity.forbiddenword.dto.ForbiddenWordResponse;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.serendipity.seity.common.response.BaseResponseStatus.ALREADY_EXIST_FORBIDDEN_WORD;
 
 /**
  * 금칙어 관련 service 클래스입니다.
@@ -29,7 +33,12 @@ public class ForbiddenWordService {
      * @param request 등록하려는 금칙어
      * @param member 현재 로그인한 사용자
      */
-    public void createForbiddenWord(CreateForbiddenWordRequest request, Member member) {
+    public void createForbiddenWord(CreateForbiddenWordRequest request, Member member) throws BaseException {
+
+        if (forbiddenWordRepository.findByValue(request.getValue()).isPresent()) {
+
+            throw new BaseException(ALREADY_EXIST_FORBIDDEN_WORD);
+        }
 
         forbiddenWordRepository.save(ForbiddenWord.createForbiddenWord(member, request.getValue()));
     }
@@ -45,6 +54,22 @@ public class ForbiddenWordService {
         for (ForbiddenWord word : forbiddenWordRepository.findAll()) {
 
             result.add(ForbiddenWordResponse.of(word));
+        }
+
+        return result;
+    }
+
+    /**
+     * 모든 금칙어 리스트를 List<String> 형식으로 반환하는 메서드입니다.
+     * @return 금칙어 리스트
+     */
+    public List<String> getForbiddenWordByStringList() {
+
+        List<String> result = new ArrayList<>();
+
+        for (ForbiddenWord word : forbiddenWordRepository.findAll()) {
+
+            result.add(word.getValue());
         }
 
         return result;

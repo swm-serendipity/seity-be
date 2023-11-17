@@ -69,7 +69,7 @@ public class ChatGptService {
      * @throws JsonProcessingException json 파싱에서 예외가 발생한 경우
      */
     public Flux<String> ask(List<ChatGptMessageRequest> messages, List<DetectionRequest> detections,
-                            String sessionId, String question, Member member)
+                            String sessionId, String question, Member member, String chatModel)
             throws JsonProcessingException {
 
         if (question != null) {
@@ -77,7 +77,7 @@ public class ChatGptService {
         }
 
         ChatGptRequest chatGptRequest = new ChatGptRequest(
-                ChatGptConfig.CHAT_MODEL,
+                ChatGptConfig.getChatModel(chatModel),
                 ChatGptConfig.MAX_TOKEN,
                 ChatGptConfig.TEMPERATURE,
                 ChatGptConfig.STREAM,
@@ -136,7 +136,7 @@ public class ChatGptService {
                                             } else {
 
                                                 // 답변이 끝난 경우 답변을 저장
-                                                Prompt prompt = promptService.savePrompt(sessionId, question, answer.getAnswer(), member);
+                                                Prompt prompt = promptService.savePrompt(sessionId, question, answer.getAnswer(), member, chatModel);
 
                                                 // 민감정보 탐지 내역 저장
                                                 if (detections != null && !detections.isEmpty()) {

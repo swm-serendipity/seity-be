@@ -60,6 +60,10 @@ public enum BaseResponseStatus {
 
     // calling
     INVALID_CALLING_ID_EXCEPTION(false, 4070, BAD_REQUEST, "소명 요청 id가 유효하지 않습니다."),
+    ALREADY_CREATED_CALLING(false, 4071, BAD_REQUEST, "이미 소명 요청한 프롬프트입니다"),
+
+    // forbidden word
+    ALREADY_EXIST_FORBIDDEN_WORD(false, 4080, BAD_REQUEST, "이미 존재하는 금칙어입니다"),
 
     /**
      * 5000 : Database, Server 오류

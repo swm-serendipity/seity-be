@@ -132,4 +132,29 @@ public class Member extends BaseTimeEntity implements UserDetails {
 
         return new Member(password, name, loginId, email, birthDate, part, MemberStatus.WAITING_APPROVE, role);
     }
+
+    /**
+     * 사용자 정보 수정 메서드입니다.
+     * @param name 이름
+     * @param part 직무
+     * @param role 권한
+     */
+    public void update(String name, MemberPart part, MemberRole role) {
+
+        if (name != null) {
+
+            this.name = name;
+        }
+
+        if (part != null) {
+
+            this.part = part;
+        }
+
+        if (role != null) {
+
+            roles.clear();
+            roles.add(role.getCode());
+        }
+    }
 }

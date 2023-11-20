@@ -81,7 +81,7 @@ public class PromptDetectionService {
      * @param member 현재 로그인한 사용자
      * @return 민감정보 탐지 내역
      */
-    public DetectionPagingResponse getDetectionList(Member member, int pageNumber, int pageSize) {
+    public DetectionPagingResponse getDetectionList(Member member, int pageNumber, int pageSize) throws BaseException {
 
         Pageable pageable =
                 PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createTime"));
@@ -103,7 +103,7 @@ public class PromptDetectionService {
         }
 
         return pagingDetections(
-                findDetectionList,
+                result,
                 promptDetectionRepository.findPromptDetectionByIsDetectedAndPartOrderByCreateTimeDesc(true, member.getPart().getValue()).size(),
                 pageSize,
                 pageNumber);
@@ -174,16 +174,19 @@ public class PromptDetectionService {
         promptDetectionRepository.deleteById(id);
     }
 
-    private DetectionPagingResponse pagingDetections(List<PromptDetection> detections, int totalDetectionNumber, int pageSize, int page) {
+    private DetectionPagingResponse pagingDetections(List<MultipleDetectionResponse> detections, int totalDetectionNumber, int pageSize, int page) throws BaseException {
 
         List<MultipleDetectionResponse> result = new ArrayList<>();
 
-        for (PromptDetection detection : detections) {
+        for (MultipleDetectionResponse detection : detections) {
+
+            PromptDetection findDetection = promptDetectionRepository.findById(detection.getId()).orElseThrow(
+                    () -> new BaseException(INVALID_DETECTION_ID_EXCEPTION));
 
             result.add(MultipleDetectionResponse.of(
-                    promptRepository.findById(detection.getPromptId()),
+                    promptRepository.findById(findDetection.getPromptId()),
                     memberRepository.findById(detection.getUserId()),
-                    detection));
+                    findDetection));
         }
 
         return new DetectionPagingResponse((totalDetectionNumber - 1) / pageSize + 1, totalDetectionNumber, page, result);

@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/reissue").permitAll()
                         .requestMatchers("/member/part").permitAll()
                         .requestMatchers("/dlp/de-identification/name").permitAll()
+                        .requestMatchers("/dpr/**").permitAll()
 
                         .requestMatchers("/detection").hasRole("ADMIN")
                         .requestMatchers("/detection/**").hasRole("ADMIN")
@@ -49,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/calling/admin/history/**").hasRole("ADMIN")
                         .requestMatchers("/calling/solve").hasRole("ADMIN")
                         .requestMatchers(DELETE, "/calling").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilter(corsConfig.corsFilter()) // CorsFilter 등록

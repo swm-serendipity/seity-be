@@ -33,4 +33,15 @@ public enum MemberRole {
 
         throw new BaseException(INVALID_MEMBER_ROLE_EXCEPTION);
     }
+
+    public static MemberRole ofForUpdate(String value) throws BaseException {
+
+        for (MemberRole role: MemberRole.values()) {
+            if (role.code.equals(value)) {
+                return role;
+            }
+        }
+
+        return null;
+    }
 }

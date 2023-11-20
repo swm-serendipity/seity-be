@@ -35,4 +35,16 @@ public enum MemberPart {
 
         throw new BaseException(BaseResponseStatus.INVALID_MEMBER_PART_EXCEPTION);
     }
+
+    public static MemberPart ofForUpdate(String part) throws BaseException {
+
+        for (MemberPart value: MemberPart.values()) {
+
+            if (value.value.equals(part)) {
+                return value;
+            }
+        }
+
+        return null;
+    }
 }

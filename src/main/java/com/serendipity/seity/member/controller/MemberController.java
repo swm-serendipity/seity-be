@@ -2,10 +2,7 @@ package com.serendipity.seity.member.controller;
 
 import com.serendipity.seity.common.exception.BaseException;
 import com.serendipity.seity.common.response.BaseResponse;
-import com.serendipity.seity.member.dto.LoginRequest;
-import com.serendipity.seity.member.dto.MemberPartResponse;
-import com.serendipity.seity.member.dto.MemberResponse;
-import com.serendipity.seity.member.dto.SignUpRequest;
+import com.serendipity.seity.member.dto.*;
 import com.serendipity.seity.member.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -106,6 +103,31 @@ public class MemberController {
     public BaseResponse<?> logout(@RequestParam String refreshToken) {
 
         memberService.deleteRefreshToken(refreshToken);
+        return new BaseResponse<>(SUCCESS);
+    }
+
+    /**
+     * 사용자 관리를 위해 사용자를 페이징하여 조회하는 메서드입니다.
+     * @param pageNumber 페이지 번호 (0부터 시작)
+     * @param pageSize 페이지 크기
+     * @return 사용자 정보
+     */
+    @GetMapping("/admin/member/management")
+    public BaseResponse<?> getPagingMember(@RequestParam int pageNumber, @RequestParam int pageSize) {
+
+        return new BaseResponse<>(memberService.getPagingMember(pageNumber, pageSize));
+    }
+
+    /**
+     * 사용자 정보를 수정하는 메서드입니다.
+     * @param request 수정 정보
+     * @return 결과
+     * @throws BaseException 사용자 id가 올바르지 않을 경우
+     */
+    @PatchMapping("/admin/member")
+    public BaseResponse<?> updateMember(@RequestBody UpdateMemberRequest request) throws BaseException {
+
+        memberService.updateMember(request);
         return new BaseResponse<>(SUCCESS);
     }
 }

@@ -13,6 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -24,6 +27,7 @@ import org.springframework.util.StringUtils;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.serendipity.seity.common.response.BaseResponseStatus.*;
 import static com.serendipity.seity.member.Member.createMember;
@@ -195,6 +199,50 @@ public class MemberService {
         if (findToken != null) {
             refreshTokenRedisRepository.delete(findToken);
         }
+    }
+
+    /**
+     * 사용자 페이징 메서드입니다.
+     * @param pageNumber 페이지 크기
+     * @param pageSize 페이지 번호
+     * @return 페이징 결과
+     */
+    public MemberPagingResponse getPagingMember(int pageNumber, int pageSize) {
+
+        Pageable pageable =
+                PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.ASC, "createTime"));
+
+        int totalMemberNumber = memberRepository.countByRolesContaining("USER");
+
+        return pagingMembers(
+                memberRepository.findByRolesContaining("USER", pageable),
+                totalMemberNumber,
+                (totalMemberNumber - 1) / pageSize + 1,
+                pageNumber);
+    }
+
+    /**
+     * 사용자 정보 수정 메서드입니다.
+     * @param request 수정 정보
+     */
+    public void updateMember(UpdateMemberRequest request) throws BaseException {
+
+        Member findMember = memberRepository.findById(request.getId()).orElseThrow(
+                () -> new BaseException(INVALID_MEMBER_ID_UPDATE_EXCEPTION));
+
+        findMember.update(request.getName(), MemberPart.ofForUpdate(request.getPart()), MemberRole.ofForUpdate(request.getRole()));
+        memberRepository.save(findMember);
+    }
+
+    private MemberPagingResponse pagingMembers(List<Member> members, int totalMemberNumber, int totalPages, int page) {
+
+        List<MultipleMemberResponse> result = new ArrayList<>();
+        for (Member member : members) {
+
+            result.add(MultipleMemberResponse.of(member));
+        }
+
+        return new MemberPagingResponse(totalPages, totalMemberNumber, page, result);
     }
 
     // Request Header 에서 토큰 정보 추출

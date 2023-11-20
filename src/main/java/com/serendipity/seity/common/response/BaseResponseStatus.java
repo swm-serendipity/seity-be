@@ -27,6 +27,7 @@ public enum BaseResponseStatus {
     NO_LOGIN_USER(false,4000, BAD_REQUEST, "로그인된 사용자가 없습니다."),
     INVALID_USER_ACCESS_EXCEPTION(false, 4001, FORBIDDEN, "권한이 없는 유저의 접근입니다."),
     INVALID_REFRESH_TOKEN_USER_ID_EXCEPTION(false, 4002, INTERNAL_SERVER_ERROR, "refresh token 내부에 사용자 id 정보가 존재하지 않습니다."),
+    INVALID_MEMBER_ID_UPDATE_EXCEPTION(false, 4003, BAD_REQUEST, "사용자 id가 유효하지 않습니다"),
 
     // exception handler
     HTTP_MESSAGE_NOT_READABLE(false,4010, BAD_REQUEST, "잘못된 Request 입니다."),
